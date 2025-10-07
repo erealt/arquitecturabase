@@ -15,7 +15,16 @@ El sistema está orientado a servicios y se centra en la **gestión de usuarios*
 
 ## 🧩 Estructura del proyecto
 
-arquitecturabase/ ├── index.js # Punto de entrada del backend (API Rest) ├── servidor/ # Lógica del sistema y pruebas │ ├── modelo.js │ ├── modeloSpec.js │ └── cad.js ├── cliente/ # Frontend y comunicación Rest │ ├── index.html │ ├── clienteRest.js │ └── controlWeb.js
+arquitecturabase/ 
+├── index.js # Punto de entrada del backend (API Rest) 
+├── servidor/ # Lógica del sistema y pruebas 
+│ ├── modelo.js 
+│ ├── modeloSpec.js 
+│ └── cad.js
+├── cliente/ # Frontend y comunicación Rest
+│ ├── index.html 
+│ ├── clienteRest.js
+│ └── controlWeb.js
 
 
 ## 🚀 Tecnologías utilizadas
