@@ -1,12 +1,50 @@
 <!DOCTYPE html>
- <html> 
-    <head>
-         <meta charset="utf-8"> 
-         <meta name="viewport" content="width=device-width, initial-scale=1"> 
-         <title>Titulo</title>
-          <script src="./modelo.js"></script>
-        </head>
-         <body> 
-
-         </body> 
-         </html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Titulo</title>
+    <!-- Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- PopperJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <!-- Bootstrap 4 JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Tus scripts -->
+    <script src="./cliente/clienteRest.js"></script>
+    <script src="./cliente/controlWeb.js"></script>
+  </head>
+  <body>
+    <!-- Navbar de Bootstrap -->
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+      <!-- Brand/logo -->
+      <a class="navbar-brand" href="#">Sistema</a>
+      <!-- Links -->
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="#">Link 1</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Link 2</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Link 3</a>
+        </li>
+      </ul>
+    </nav>
+    <!-- Contenedor principal -->
+    <div class="container-fluid">
+      <h3>Arquitectura Base</h3>
+      <!--<p>The .navbar-brand class is used to highlight the brand/logo/project name of your page.</p>-->
+      <!-- Aquí se inyecta el formulario -->
+      <div id="au"></div>
+    </div>
+    <script>
+      rest = new ClienteRest();
+      cw = new ControlWeb();
+      cw.mostrarAgregarUsuario();
+    </script>
+  </body>
+</html>

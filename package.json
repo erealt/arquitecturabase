@@ -1,0 +1,27 @@
+{
+  "name": "arquitecturabase",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "testW": "node_modules\\.bin\\jasmine-node servidor",
+    "test": "node_modules\\.bin\\jasmine-node servidor"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erealt/arquitecturabase.git"
+  },
+  "author": "estela",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/erealt/arquitecturabase/issues"
+  },
+  "homepage": "https://github.com/erealt/arquitecturabase#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "jasmine-node": "^3.0.0"
+  }
+}
