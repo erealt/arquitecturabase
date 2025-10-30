@@ -32,7 +32,8 @@ function ControlWeb() {
     });
 };
 this.comprobarSesion=function(){ 
-    let nick=localStorage.getItem("nick"); 
+    // let nick=localStorage.getItem("nick"); 
+    let nick = $.cookie("nick");
     if (nick){ cw.mostrarMensaje("Bienvenido al sistema, "+nick); 
 
     } else{ cw.mostrarAgregarUsuario(); } }
@@ -44,7 +45,8 @@ this.mostrarMensaje = function(msg) {
         $("#au").html('<div id="bnv"><h3>' + msg + '</h3></div>');
     };
 this.salir = function() {
-        localStorage.removeItem("nick");
+        $.removeCookie("nick");
+        // localStorage.removeItem("nick");
         location.reload();
     };
 // 2. Método para asociar el evento a los elementos estáticos del nav

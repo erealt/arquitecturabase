@@ -5,7 +5,9 @@ function ClienteRest(){
              let msg="El nick "+nick+" está ocupado";
               if (data.nick!=-1){
                  console.log("Usuario "+nick+" ha sido registrado");
-                  msg="Bienvenido al sistema, "+nick; localStorage.setItem("nick",nick); 
+                  msg="Bienvenido al sistema, "+nick; 
+                //   localStorage.setItem("nick",nick); 
+                    $.cookie("nick", nick);
                 } else{ console.log("El nick ya está ocupado"); 
 
                 } cw.mostrarMensaje(msg); }); }
