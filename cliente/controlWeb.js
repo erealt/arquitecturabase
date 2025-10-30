@@ -31,4 +31,37 @@ function ControlWeb() {
         // Puedes modificar ClienteRest.obtenerUsuarios para que imprima en #listaUsuarios
     });
 };
+this.comprobarSesion=function(){ 
+    let nick=localStorage.getItem("nick"); 
+    if (nick){ cw.mostrarMensaje("Bienvenido al sistema, "+nick); 
+
+    } else{ cw.mostrarAgregarUsuario(); } }
+
+this.mostrarMensaje = function(msg) {
+        // Elimina el formulario de agregar usuario si existe
+        $("#mAU").remove(); 
+        // Inyecta el mensaje de bienvenida en el contenedor principal
+        $("#au").html('<div id="bnv"><h3>' + msg + '</h3></div>');
+    };
+this.salir = function() {
+        localStorage.removeItem("nick");
+        location.reload();
+    };
+// 2. Método para asociar el evento a los elementos estáticos del nav
+    this.inicializarNav = function() {
+        let cw = this;
+        
+        // Asocia la funcionalidad de salir al enlace con id="salirNav"
+        $("#salir").on("click", function(e) {
+            e.preventDefault(); // Evita que el enlace salte o recargue la página
+            cw.salir();
+        });
+
+        // Opcional: Asocia la funcionalidad de iniciar sesión al enlace correspondiente
+        // Si el enlace de Iniciar Sesión tiene id="iniciarSesionNav"
+        $("#iniciarSesion").on("click", function(e) {
+            e.preventDefault(); 
+            cw.mostrarAgregarUsuario();
+        });
+    };
 }

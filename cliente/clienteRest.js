@@ -1,33 +1,33 @@
 function ClienteRest(){
-    this.agregarUsuario=function(nick){
+    this.agregarUsuario=function(nick){ 
         var cli=this; 
-        $.getJSON("/agregarUsuario/"+nick,function(data){ 
-            if (data.nick!=-1){
-                console.log("Usuario "+nick+" ha sido registrado") 
-            } else{
-                console.log("El nick ya está ocupado"); 
-            }
-        });
-    };
+        $.getJSON("/agregarUsuario/"+nick,function(data){
+             let msg="El nick "+nick+" está ocupado";
+              if (data.nick!=-1){
+                 console.log("Usuario "+nick+" ha sido registrado");
+                  msg="Bienvenido al sistema, "+nick; localStorage.setItem("nick",nick); 
+                } else{ console.log("El nick ya está ocupado"); 
 
-    this.agregarUsuario2=function(nick){
-        $.ajax({
-            type: 'GET',
-            url: '/agregarUsuario/' + nick,
-            success: function(data){
-                if (data.nick != -1){
-                    console.log("Usuario " + nick + " ha sido registrado");
-                } else{
-                    console.log("El nick ya está ocupado");
-                }
-            },
-            error: function(xhr, textStatus, errorThrown){
-                console.log("Status: " + textStatus);
-                console.log("Error: " + errorThrown);
-            },
-            contentType: 'application/json'
-        });
-    };
+                } cw.mostrarMensaje(msg); }); }
+
+    // this.agregarUsuario2=function(nick){
+    //     $.ajax({
+    //         type: 'GET',
+    //         url: '/agregarUsuario/' + nick,
+    //         success: function(data){
+    //             if (data.nick != -1){
+    //                 console.log("Usuario " + nick + " ha sido registrado");
+    //             } else{
+    //                 console.log("El nick ya está ocupado");
+    //             }
+    //         },
+    //         error: function(xhr, textStatus, errorThrown){
+    //             console.log("Status: " + textStatus);
+    //             console.log("Error: " + errorThrown);
+    //         },
+    //         contentType: 'application/json'
+    //     });
+    // };
 
     // Obtener todos los usuarios
     this.obtenerUsuarios = function(){
