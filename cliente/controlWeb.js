@@ -6,6 +6,9 @@ function ControlWeb() {
         cadena += '  <label for="nick">Name:</label>';
         cadena += '  <input type="text" class="form-control" id="nick" placeholder="Introduce tu nick">';
         cadena += '  <button id="btnAU" type="button" class="btn btn-primary mt-2">Entrar</button>';
+
+        // cadena = cadena + '<button id="btnAU" type="submit" class="btn btn-primary">Submit</button>'; 
+        cadena=cadena+'<div><a href="/auth/google"><img src="./cliente/img/web_light_rd_SI@1x.png" style="height:40px;"></a></div>';
         cadena += '</div>';
 
         // Inserta el formulario en el div con id 'au'
