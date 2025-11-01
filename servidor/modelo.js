@@ -12,7 +12,11 @@ function Sistema(){
                  console.log("el nick "+nick+" está en uso"); 
                 }
         return res;
-    } 
+    }
+    this.usuarioGoogle=function(usr,callback){ 
+        this.cad.buscarOCrearUsuario(usr,function(obj){ 
+            callback(obj); });
+         } 
     this.obtenerUsuario=function(){ 
         return this.usuarios; 
     }
