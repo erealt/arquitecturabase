@@ -1,3 +1,8 @@
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
+
 const fs=require("fs"); 
 const express = require('express'); 
 const app = express(); 
@@ -11,7 +16,7 @@ app.use(express.static(__dirname + "/"));
 let sistema = new modelo.Sistema();
 
 app.use(cookieSession({
-   name: 'Sistema', keys: ['key1', 'key2'] }));
+   name: 'Sistema', keys: ["key1","key2"] }));
 app.use(passport.initialize()); 
 app.use(passport.session());
 app.get("/auth/google",passport.authenticate('google', { scope: ['profile','email'] }));
