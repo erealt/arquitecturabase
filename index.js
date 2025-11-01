@@ -10,6 +10,10 @@ const cookieSession=require("cookie-session");
 require("./servidor/passport-setup.js");
 const modelo = require("./servidor/modelo.js"); 
 const PORT = process.env.PORT || 3000; 
+const bodyParser=require("body-parser");
+
+app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.json());
 
 app.use(express.static(__dirname + "/"));
 let sistema = new modelo.Sistema();
@@ -62,9 +66,16 @@ app.get("/good", function(request,response){
         response.redirect('/');
        });
        });
+  app.post('/oneTap/callback', 
+    passport.authenticate('google-one-tap', { failureRedirect: '/fallo' }),
+     function(req, res) { 
+      // Successful authentication, redirect home. 
+      res.redirect('/good');
+     });
 
-  app.get("/fallo",function(request,response){ 
-    response.send({nick:"nook"}) });
+  app.get("/fallo",function(request,response){
+    response.send({nick:"nook"});
+  });
 
 
        app.listen(PORT, () => { 

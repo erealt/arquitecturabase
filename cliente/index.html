@@ -16,6 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script src="./cliente/clienteRest.js"></script>
     <script src="./cliente/controlWeb.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
     <!-- Navbar de Bootstrap -->
@@ -42,6 +43,12 @@
       <!-- Aquí se inyecta el formulario -->
       <div id="au"></div>
     </div>
+    <div
+      id="g_id_onload"
+      data-client_id=process.env.GOOGLE_CLIENT_ID
+      data-login_uri=http://localhost:3000/oneTap/callback
+      data-skip_prompt_cookie="nick"
+    ></div>
     <script>
       cw = new ControlWeb();
       rest = new ClienteRest(cw);
