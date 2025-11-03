@@ -1,4 +1,5 @@
 function ControlWeb() {
+   
     this.mostrarAgregarUsuario = function() {
         // Construye el HTML del formulario como una cadena
         let cadena = '';
@@ -37,13 +38,19 @@ function ControlWeb() {
 this.comprobarSesion=function(){ 
     // let nick=localStorage.getItem("nick"); 
     let nick = $.cookie("nick");
-    if (nick){ cw.mostrarMensaje("Bienvenido al sistema, "+nick); 
+    if (nick){ 
+        cw.mostrarMensaje("Bienvenido al sistema, "+nick); 
 
-    } else{ cw.mostrarAgregarUsuario(); } }
+    } else{ 
+        //cw.mostrarAgregarUsuario();
+        cw.mostrarRegistro();
+         } }
 
 this.mostrarMensaje = function(msg) {
         // Elimina el formulario de agregar usuario si existe
         $("#mAU").remove(); 
+
+        $("#registro").html("");
         // Inyecta el mensaje de bienvenida en el contenedor principal
         $("#au").html('<div id="bnv"><h3>' + msg + '</h3></div>');
     };
@@ -51,6 +58,7 @@ this.salir = function() {
         $.removeCookie("nick");
         // localStorage.removeItem("nick");
         location.reload();
+        rest.cerrarSesion();
     };
 // 2. Método para asociar el evento a los elementos estáticos del nav
     this.inicializarNav = function() {
@@ -69,4 +77,27 @@ this.salir = function() {
             cw.mostrarAgregarUsuario();
         });
     };
+
+    this.mostrarRegistro=function(){
+         $("#fmRegistro").remove();
+          $("#registro").load("./cliente/registro.html",function(){
+             $("#btnRegistro").on("click",function(e){
+                 e.preventDefault(); 
+                 let email=$("#email").val();
+                 let pwd=$("#pwd").val();
+                  if (email && pwd){
+                     rest.registrarUsuario(email,pwd); 
+                     console.log(email+" "+pwd);
+                     } else {
+                        cw.mostrarMensaje("Introduce email y contraseña.");
+                     }
+                    }); 
+                });
+             }
+    this.limpiar = function(){
+        $("#au").html(""); // Limpia el área de usuario (donde está el One Tap/Botón)
+        $("#registro").html(""); // Limpia el área de registro/login
+    // También puedes borrar el mensaje de bienvenida si existe
+        $("#bnv").remove();
+}
 }

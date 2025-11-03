@@ -15,6 +15,19 @@ function Sistema(){
     this.numeroUsuarios=function(){
         return Object.keys(this.usuarios).length;
 } 
+this.registrarUsuario=function(obj,callback){
+     let modelo=this; 
+     if (!obj.nick){ obj.nick=obj.email;
+       obj.email=obj.nick;
+      } 
+      this.cad.buscarUsuario(obj,function(usr){ 
+        if (!usr){
+             modelo.cad.insertarUsuario(obj,function(res){ 
+                callback(res); });
+             }
+              else { callback({"email":-1});
+             } });
+             }
 }
 function Usuario(nick){ 
     this.nick=nick;

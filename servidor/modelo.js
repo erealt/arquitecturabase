@@ -3,6 +3,22 @@ function Sistema(){
     this.cad=new datos.CAD();
     this.cad.conectar(function(db){ console.log("Conectado a Mongo Atlas"); });
     this.usuarios={};
+    this.registrarUsuario=function(obj,callback){ 
+        let modelo=this; 
+        if (!obj.nick){ 
+            obj.nick=obj.email; 
+        } 
+        this.cad.buscarUsuario({"email":obj.email},function(usr){ 
+            if (!usr){
+                modelo.cad.insertarUsuario(obj,function(res){ 
+                    callback(res); 
+                }); 
+            } else { 
+                callback({"email":-1}); 
+            } 
+        }); 
+    }
+  
      this.agregarUsuario=function(nick){ 
        let res={"nick":-1};
         if (!this.usuarios[nick]){

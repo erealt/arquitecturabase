@@ -1,4 +1,36 @@
 function ClienteRest(){
+
+
+this.registrarUsuario=function(email,password){
+    var cli=this;
+    $.ajax({
+        type:'POST',
+        url:'/registrarUsuario',
+        data: JSON.stringify({"email":email,"password":password}),
+        success:function(data){
+            if (data.nick!=-1){
+                //  Mensaje de registro realizado
+                console.log("Usuario "+data.nick+" ha sido registrado");
+                // $.cookie("nick",data.nick);
+                cw.limpiar();
+                // cw.mostrarMensaje("Bienvenido al sistema, "+data.nick + ". Confirma tu cuenta en el email.");
+                cw.mostrarMensaje("¡Registro exitoso! Por favor, inicia sesión a continuación.");
+                // Ahora que está registrado, le mostramos el login
+                cw.mostrarLogin(); //  Usamos el método que vamos a implementar
+            } else{
+                //  Mensaje en caso de nick/email ocupado
+                console.log("El nick está ocupado");
+                cw.mostrarMensaje("El email ya está registrado.");
+            }
+        },
+        error:function(xhr, textStatus, errorThrown){
+            console.log("Status: " + textStatus);
+            console.log("Error: " + errorThrown);
+            cw.mostrarMensaje("Error al intentar registrar el usuario."); //  Mensaje de error
+        },
+        contentType:'application/json'
+    });
+}
     this.agregarUsuario=function(nick){ 
         var cli=this; 
         $.getJSON("/agregarUsuario/"+nick,function(data){
@@ -94,4 +126,29 @@ function ClienteRest(){
             contentType: 'application/json'
         });
     };
+    this.registrarUsuario=function(email,password){
+         $.ajax({
+             type:'POST',
+              url:'/registrarUsuario',
+               data: JSON.stringify({"email":email,"password":password}),
+                success:function(data){ 
+                    if (data.nick!=-1){ 
+                        console.log("Usuario "+data.nick+" ha sido registrado");
+                         $.cookie("nick",data.nick);
+                          cw.limpiar();
+                           cw.mostrarMensaje("Bienvenido al sistema, "+data.nick); 
+                           //cw.mostrarLogin(); 
+                           } 
+                           else{ 
+                            console.log("El nick está ocupado");
+                        } 
+                    }, 
+                    error:function(xhr, textStatus, errorThrown){ 
+                        console.log("Status: " + textStatus);
+                         console.log("Error: " + errorThrown); 
+                        },
+                         contentType:'application/json' 
+                        });
+                     }
+
 }

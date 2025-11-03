@@ -48,7 +48,14 @@
       data-client_id=process.env.GOOGLE_CLIENT_ID
       data-login_uri=http://localhost:3000/oneTap/callback
       data-skip_prompt_cookie="nick"
+      data-use_fedcm_for_prompt="false"
     ></div>
+    <div class="container">
+       <h3>Sistema</h3> 
+       <div id="au"></div>
+        <div id="registro"></div> 
+        <div id="msg"></div> 
+      </div>
     <script>
       cw = new ControlWeb();
       rest = new ClienteRest(cw);
