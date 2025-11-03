@@ -136,11 +136,14 @@ this.registrarUsuario=function(email,password){
                         console.log("Usuario "+data.nick+" ha sido registrado");
                          $.cookie("nick",data.nick);
                           cw.limpiar();
-                           cw.mostrarMensaje("Bienvenido al sistema, "+data.nick); 
-                           //cw.mostrarLogin(); 
+                        //    cw.mostrarMensaje("Bienvenido al sistema, "+data.nick); 
+                        cw.mostrarMensaje("¡Registro exitoso! Por favor, inicia sesión a continuación.");
+                           cw.mostrarLogin(); 
                            } 
                            else{ 
                             console.log("El nick está ocupado");
+                            
+
                         } 
                     }, 
                     error:function(xhr, textStatus, errorThrown){ 
@@ -150,5 +153,30 @@ this.registrarUsuario=function(email,password){
                          contentType:'application/json' 
                         });
                      }
+   this.loginUsuario=function(email, password) {
+    $.ajax({
+        type: 'POST',
+        url:'/loginUsuario', // 🎯 Endpoint que debes implementar en index.js
+        data: JSON.stringify({"email": email, "password": password}),
+        success: function(data) {
+            if (data.nick!=-1){
+                console.log("Usuario "+data.nick+" ha iniciado sesión");
+                $.cookie("nick", data.nick);
+                cw.limpiar();
+                cw.mostrarMensaje ("Bienvenido al sistema, "+data.nick);
+            } else{
+                console.log("No se pudo iniciar sesión");
+                cw.mostrarMensaje("Credenciales incorrectas o cuenta no confirmada."); 
+                cw.mostrarLogin(); // Volver a mostrar el login si falla
+            }
+        },
+        error:function(xhr, textStatus, errorThrown) {
+            console.log("Status: " + textStatus);
+            console.log("Error: " + errorThrown);
+            cw.mostrarMensaje("Error de conexión con el servidor.");
+        },
+        contentType: 'application/json'
+    });
+} 
 
 }

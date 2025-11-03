@@ -45,6 +45,17 @@ function Sistema(){
     this.numeroUsuarios=function(){
         return Object.keys(this.usuarios).length;
     }
+   this.loginUsuario=function(obj,callback) { 
+    this.cad.buscarUsuario({"email":obj.email}, function(usr){
+        if(usr && usr.password === obj.password) 
+        {
+            
+            callback(usr);
+        } else {
+            callback({"email":-1});
+        }
+    });
+} 
 }
 function Usuario(nick){ 
     this.nick=nick;

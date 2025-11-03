@@ -40,10 +40,12 @@ this.comprobarSesion=function(){
     let nick = $.cookie("nick");
     if (nick){ 
         cw.mostrarMensaje("Bienvenido al sistema, "+nick); 
-
+        $("#iniciarSesion").hide();
+       
     } else{ 
         //cw.mostrarAgregarUsuario();
-        cw.mostrarRegistro();
+        cw.mostrarLogin();
+        $("#salir").hide();
          } }
 
 this.mostrarMensaje = function(msg) {
@@ -69,13 +71,14 @@ this.salir = function() {
             e.preventDefault(); // Evita que el enlace salte o recargue la página
             cw.salir();
         });
-
-        // Opcional: Asocia la funcionalidad de iniciar sesión al enlace correspondiente
-        // Si el enlace de Iniciar Sesión tiene id="iniciarSesionNav"
         $("#iniciarSesion").on("click", function(e) {
             e.preventDefault(); 
-            cw.mostrarAgregarUsuario();
+            cw.mostrarLogin();
         });
+        $("#registroNav").on("click", function(e) {
+        e.preventDefault(); 
+        cw.mostrarRegistro(); 
+    });
     };
 
     this.mostrarRegistro=function(){
@@ -93,7 +96,50 @@ this.salir = function() {
                      }
                     }); 
                 });
+                cw.mostrarBotonGoogle();
              }
+    this.mostrarLogin=function(){
+        cw.limpiar(); // Limpia cualquier formulario anterior (registro o login)
+        
+        // 1. Mostrar el formulario de Login Local en el contenedor #registro
+        $("#registro").load("./cliente/login.html",function(){
+            // a. Asignar evento al botón de Login
+            $("#btnLogin").on("click", function(e){
+                e.preventDefault(); 
+                let email=$("#emailL").val();
+                let pwd=$("#pwdL").val();
+                if (email && pwd) {
+                    // Llamar al método de ClienteRest (pendiente de implementar o verificar)
+                    rest.loginUsuario(email, pwd); 
+                } else {
+                    cw.mostrarMensaje("Introduce email y contraseña.");
+                }
+            });
+
+            // b. Asignar evento al enlace de Registro
+            $("#linkRegistro").on("click", function(e) {
+                e.preventDefault();
+                cw.mostrarRegistro(); // Cambia al formulario de registro
+            });
+            // 2. Mostrar el botón de Google OAuth/One Tap en el contenedor #au
+        cw.mostrarBotonGoogle();
+        });
+
+        
+    }
+    this.mostrarBotonGoogle = function() {
+        let cadena = '';
+        cadena += '<div class="form-group" id="mAU">';
+        cadena += '<h3>O Iniciar con Google</h3>';
+        // Usamos solo el enlace de Google para simplificar
+        cadena += '<div><a href="/auth/google"><img src="./cliente/img/web_light_rd_SI@1x.png" style="height:40px;"></a></div>';
+        cadena += '</div>';
+
+        $("#registro").append(cadena); 
+    };
+
+    
+
     this.limpiar = function(){
         $("#au").html(""); // Limpia el área de usuario (donde está el One Tap/Botón)
         $("#registro").html(""); // Limpia el área de registro/login

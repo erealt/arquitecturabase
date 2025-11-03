@@ -80,7 +80,11 @@ app.get("/good", function(request,response){
        }); 
       });
   
-
+    app.post("/loginUsuario",function(request,response){ 
+  sistema.loginUsuario(request.body,function(res){ 
+    response.send({"nick":res.email}); 
+  }); 
+})
 
 
   app.get("/fallo",function(request,response){
