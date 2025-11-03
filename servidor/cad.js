@@ -10,6 +10,7 @@ this.conectar=async function(callback){
      await client.connect();
       const database=client.db("sistema"); 
       cad.usuarios=database.collection("usuarios");
+      callback(database);
  } 
  this.buscarOCrearUsuario=function(usr,callback){
      buscarOCrear(this.usuarios,usr,callback); } 

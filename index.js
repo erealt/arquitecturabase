@@ -25,7 +25,8 @@ app.use(passport.session());
 app.get("/auth/google",passport.authenticate('google', { scope: ['profile','email'] }));
 
  app.get("/", function(request,response){
-   var contenido = fs.readFileSync(__dirname + "/cliente/index.html");
+   var contenido = fs.readFileSync(__dirname + "/cliente/index.html",'utf-8');
+   contenido = contenido.replace('data-client_id=process.env.GOOGLE_CLIENT_ID', 'data-client_id="' + process.env.GOOGLE_CLIENT_ID + '"');
    response.setHeader("Content-type", "text/html");
    response.send(contenido);
 });
