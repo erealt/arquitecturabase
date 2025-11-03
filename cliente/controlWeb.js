@@ -123,6 +123,7 @@ this.mostrarMensajeFormulario = function(msg, formularioSelector) {
                 e.preventDefault(); 
                 let email=$("#emailL").val();
                 let pwd=$("#pwdL").val();
+                cw.mostrarMensajeFormulario("", formSelector);
                 if (email && pwd) {
                     // Llamar al método de ClienteRest (pendiente de implementar o verificar)
                     rest.loginUsuario(email, pwd); 

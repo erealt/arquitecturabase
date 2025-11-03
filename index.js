@@ -11,6 +11,7 @@ require("./servidor/passport-setup.js");
 const modelo = require("./servidor/modelo.js"); 
 const PORT = process.env.PORT || 3000; 
 const bodyParser=require("body-parser");
+const LocalStrategy = require('passport-local').Strategy;
 
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
@@ -80,16 +81,28 @@ app.get("/good", function(request,response){
        }); 
       });
   
-    app.post("/loginUsuario",function(request,response){ 
-  sistema.loginUsuario(request.body,function(res){ 
-    response.send({"nick":res.email}); 
-  }); 
-})
-
+    app.post('/loginUsuario',passport.authenticate("local",{failureRedirect:"/fallo",successRedirect: "/ok"}) );
+app.get("/ok",function(request,response){ response.send({nick:request.user.email}) });
+app.get("/confirmarUsuario/:email/:key",function(request,response){
+   let email=request.params.email; 
+   let key=request.params.key;
+    sistema.confirmarUsuario({"email":email,"key":key},function(usr){ 
+      if (usr.email!=-1){ 
+        response.cookie('nick',usr.email); 
+      } 
+      response.redirect('/'); 
+    }); 
+  })
 
   app.get("/fallo",function(request,response){
     response.send({nick:"nook"});
   });
+  passport.use(new LocalStrategy({usernameField:"email",passwordField:"password"},
+function(email,password,done){
+   sistema.loginUsuario({"email":email,"password":password},function(user){
+     return done(null,user);
+     }) } 
+    ));
 
 
        app.listen(PORT, () => { 

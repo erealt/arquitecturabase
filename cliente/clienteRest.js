@@ -157,7 +157,7 @@ this.registrarUsuario=function(email,password){
    this.loginUsuario=function(email, password) {
     $.ajax({
         type: 'POST',
-        url:'/loginUsuario', // 🎯 Endpoint que debes implementar en index.js
+        url:'/loginUsuario', 
         data: JSON.stringify({"email": email, "password": password}),
         success: function(data) {
             if (data.nick!=-1){
@@ -167,14 +167,14 @@ this.registrarUsuario=function(email,password){
                 cw.mostrarMensaje ("Bienvenido al sistema, "+data.nick);
             } else{
                 console.log("No se pudo iniciar sesión");
-                cw.mostrarMensaje("Credenciales incorrectas o cuenta no confirmada."); 
-                cw.mostrarLogin(); // Volver a mostrar el login si falla
+                cw.mostrarMensajeFormulario("La cuenta no ha sido verificada, mire el correo.", "#fmLogin");
+                // cw.mostrarLogin(); // Volver a mostrar el login si falla
             }
         },
         error:function(xhr, textStatus, errorThrown) {
             console.log("Status: " + textStatus);
             console.log("Error: " + errorThrown);
-            cw.mostrarMensaje("Error de conexión con el servidor.");
+            cw.mostrarMensajeFormulario("Error de conexión con el servidor. Intente más tarde.", "#fmLogin");
         },
         contentType: 'application/json'
     });
