@@ -142,6 +142,7 @@ this.registrarUsuario=function(email,password){
                            } 
                            else{ 
                             console.log("El nick está ocupado");
+                            cw.mostrarMensajeFormulario("El email o nick ya está registrado. Intente iniciar sesión.", "#fmRegistro");
                             
 
                         } 

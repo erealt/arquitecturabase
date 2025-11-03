@@ -80,10 +80,23 @@ this.salir = function() {
         cw.mostrarRegistro(); 
     });
     };
+this.mostrarMensajeFormulario = function(msg, formularioSelector) {
+    let $form = $(formularioSelector);
+    // 1. Limpia mensajes de error anteriores dentro de este formulario
+    $form.find(".alert").remove(); 
 
+    if (msg) {
+        // 2. Crea y adjunta el mensaje de error (usando estilo Bootstrap alert-danger)
+        let mensajeHtml = '<div class="alert alert-danger error-msg-local mt-3" role="alert">' + msg + '</div>';
+        // Lo adjuntamos al final del formulario
+        $form.append(mensajeHtml);
+    }
+};
     this.mostrarRegistro=function(){
          $("#fmRegistro").remove();
+         cw.limpiar(); // Limpia cualquier formulario anterior (registro o login)
           $("#registro").load("./cliente/registro.html",function(){
+            const formSelector = "#fmRegistro";
              $("#btnRegistro").on("click",function(e){
                  e.preventDefault(); 
                  let email=$("#email").val();
@@ -92,7 +105,8 @@ this.salir = function() {
                      rest.registrarUsuario(email,pwd); 
                      console.log(email+" "+pwd);
                      } else {
-                        cw.mostrarMensaje("Introduce email y contraseña.");
+                        // cw.mostrarMensaje("Introduce email y contraseña.");
+                        cw.mostrarMensajeFormulario("Introduce email y contraseña.", formSelector);
                      }
                     }); 
                 });
@@ -103,6 +117,7 @@ this.salir = function() {
         
         // 1. Mostrar el formulario de Login Local en el contenedor #registro
         $("#registro").load("./cliente/login.html",function(){
+            const formSelector = "#fmLogin";
             // a. Asignar evento al botón de Login
             $("#btnLogin").on("click", function(e){
                 e.preventDefault(); 
@@ -112,7 +127,7 @@ this.salir = function() {
                     // Llamar al método de ClienteRest (pendiente de implementar o verificar)
                     rest.loginUsuario(email, pwd); 
                 } else {
-                    cw.mostrarMensaje("Introduce email y contraseña.");
+                    cw.mostrarMensajeFormulario("Introduce email y contraseña.", formSelector);
                 }
             });
 
