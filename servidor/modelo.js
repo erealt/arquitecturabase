@@ -1,5 +1,6 @@
 const datos=require("./cad.js");
 const correo=require("./emails.js");
+const bcrypt = require('bcrypt');
 function Sistema(test){ 
     this.cad=new datos.CAD();
     if (!test.test){
@@ -13,10 +14,14 @@ function Sistema(test){
          if (!obj.nick){
             obj.nick=obj.email; 
         } 
-        this.cad.buscarUsuario(obj,function(usr){
+        this.cad.buscarUsuario({"email":obj.email},async function(usr){
              if (!usr){ //el usuario no existe, luego lo puedo registrar 
-             obj.key=Date.now().toString();
+                const hash = await bcrypt.hash(obj.password, 10); // Genera el hash de forma asíncrona
+                obj.password = hash;
+            
+                obj.key=Date.now().toString();
               obj.confirmada=false;
+
                modelo.cad.insertarUsuario(obj,function(res){
                  callback(res); 
                 });
@@ -53,13 +58,21 @@ function Sistema(test){
     }
    this.loginUsuario=function(obj,callback) { 
     this.cad.buscarUsuario({"email":obj.email,"confirmada":true},function(usr){
-        if(usr && usr.password === obj.password) 
-        {
-            
-            callback(usr);
-        } else {
-            callback({"email":-1});
-        }
+        if(usr){
+                // Compara la contraseña que llega (texto plano) con el hash guardado (usr.password)
+                bcrypt.compare(obj.password, usr.password, function(err, result) {
+                    if (result) {
+                        // Las contraseñas coinciden
+                        callback(usr);
+                    } else {
+                        // Las contraseñas NO coinciden
+                        callback({"email":-1});
+                    }
+                });
+            } else {
+                // Usuario no encontrado o no confirmado
+                callback({"email":-1});
+            }
     });
 } 
 

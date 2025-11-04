@@ -13,6 +13,14 @@ const PORT = process.env.PORT || 3000;
 const bodyParser=require("body-parser");
 const LocalStrategy = require('passport-local').Strategy;
 
+const haIniciado=function(request,response,next){ 
+  if (request.user){ 
+    next(); // Permite continuar a la ruta
+  } else{ 
+    response.redirect("/") // Redirige a la página principal (login)
+  } 
+}
+
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
 
@@ -36,7 +44,7 @@ app.get("/agregarUsuario/:nick",function(request,response){
   let res=sistema.agregarUsuario(nick); 
   response.send(res); });
 
-  app.get("/obtenerUsuarios", function(request, response) {
+  app.get("/obtenerUsuarios",haIniciado, function(request, response) {
   let usuarios = sistema.obtenerUsuario();
   response.send(usuarios);
 });
@@ -93,6 +101,14 @@ app.get("/confirmarUsuario/:email/:key",function(request,response){
       response.redirect('/'); 
     }); 
   })
+app.get("/cerrarSesion",haIniciado,function(request,response){ 
+  let nick=request.user.nick;
+   request.logout();
+    response.redirect("/");
+     if (nick){ sistema.eliminarUsuario(nick);
+      sistema.eliminarUsuario(nick);
+      } });
+
 
   app.get("/fallo",function(request,response){
     response.send({nick:"nook"});

@@ -179,5 +179,11 @@ this.registrarUsuario=function(email,password){
         contentType: 'application/json'
     });
 } 
+this.cerrarSesion=function(){
+     $.getJSON("/cerrarSesion",function(){
+         console.log("Sesión cerrada");
+          $.removeCookie("nick"); 
+        });
+     }
 
 }
