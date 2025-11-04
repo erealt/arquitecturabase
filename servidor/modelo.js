@@ -1,8 +1,11 @@
 const datos=require("./cad.js");
 const correo=require("./emails.js");
-function Sistema(){ 
+function Sistema(test){ 
     this.cad=new datos.CAD();
-    this.cad.conectar(function(db){ console.log("Conectado a Mongo Atlas"); });
+    if (!test.test){
+    this.cad.conectar(function(db){
+         console.log("Conectado a Mongo Atlas"); });
+        }
     this.usuarios={};
     
     this.registrarUsuario=function(obj,callback){

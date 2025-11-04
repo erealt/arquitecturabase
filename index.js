@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
 
 app.use(express.static(__dirname + "/"));
-let sistema = new modelo.Sistema();
+let sistema = new modelo.Sistema({test:false});
 
 app.use(cookieSession({
    name: 'Sistema', keys: ["key1","key2"] }));

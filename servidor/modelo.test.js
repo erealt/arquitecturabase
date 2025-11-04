@@ -3,7 +3,7 @@ const modelo = require("./modelo.js");
 describe('El sistema', function() { 
   let sistema;
   beforeEach(function() {
-    sistema = new modelo.Sistema();
+    sistema = new modelo.Sistema({test:true});
   });
     it('inicialmente no hay usuarios', function() {
        expect(sistema.numeroUsuarios()).toEqual(0); 

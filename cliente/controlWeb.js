@@ -46,6 +46,7 @@ this.comprobarSesion=function(){
         //cw.mostrarAgregarUsuario();
         cw.mostrarLogin();
         $("#salir").hide();
+        
          } }
 
 this.mostrarMensaje = function(msg) {
