@@ -14,6 +14,25 @@ const nodemailer = require('nodemailer');
              from: 'estelaretin10@gmail.com',
               to: direccion, subject: men, 
               text: 'Pulsa aquí para confirmar cuenta',
-               html: '<p>Bienvenido a Sistema</p><p><a href="'+url+'confirmarUsuario/'+direccion+'/'+key+'">Pulsa aquí para confirmar cuenta</a></p>' 
+               html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ccc; border-radius: 5px; max-width: 600px; margin: auto;">
+                    <h2 style="color: #333;">Bienvenido al Sistema</h2>
+                    <p style="font-size: 16px;">¡Gracias por registrarte! Para activar tu cuenta, por favor, haz clic en el botón de abajo:</p>
+                    <table width="100%" cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td align="center" style="padding: 20px 0;">
+                                <a href="${url}confirmarUsuario/${direccion}/${key}" target="_blank"
+                                   style="display: inline-block; padding: 12px 24px; font-size: 16px; color: #ffffff; background-color: #007bff; border-radius: 5px; text-decoration: none;">
+                                   Pulsa aquí para confirmar cuenta
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                    <p style="font-size: 14px; color: #777;">Si tienes problemas, copia y pega el siguiente enlace en tu navegador:</p>
+                    <p style="font-size: 12px; color: #999; word-break: break-all;">${url}confirmarUsuario/${direccion}/${key}</p>
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                    <p style="font-size: 12px; color: #aaa;">Si no te registraste en Sistema, ignora este mensaje.</p>
+                </div>
+               `
             }); 
         }
