@@ -6,7 +6,7 @@ this.usuarios;
 
 this.conectar=async function(callback){ 
     let cad=this; 
-    let client= new mongo("mongodb+srv://ert:estelitta7RT@cluster0.lavnf0l.mongodb.net/?appName=Cluster0");
+    let client= new mongo(process.env.connectionString);
      await client.connect();
       const database=client.db("sistema"); 
       cad.usuarios=database.collection("usuarios");

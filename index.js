@@ -34,8 +34,17 @@ app.use(passport.session());
 app.get("/auth/google",passport.authenticate('google', { scope: ['profile','email'] }));
 
  app.get("/", function(request,response){
+   // Usar BASE_URL para construir la URI de OneTap
+   const BASE_URL = process.env.BASE_URL || "http://localhost:3000"; 
    var contenido = fs.readFileSync(__dirname + "/cliente/index.html",'utf-8');
+   
+   // 1. Inyectar GOOGLE_CLIENT_ID
    contenido = contenido.replace('data-client_id=process.env.GOOGLE_CLIENT_ID', 'data-client_id="' + process.env.GOOGLE_CLIENT_ID + '"');
+   
+   // 2. Inyectar la URL de callback de OneTap usando BASE_URL
+   const oneTapCallbackUrl = `${BASE_URL}/oneTap/callback`;
+   contenido = contenido.replace('data-login_uri=process.env.ONETAP_CALLBACK_URL_PLACEHOLDER', 'data-login_uri="' + oneTapCallbackUrl + '"');
+   
    response.setHeader("Content-type", "text/html");
    response.send(contenido);
 });

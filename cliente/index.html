@@ -43,11 +43,10 @@
       <!-- Aquí se inyecta el formulario -->
       <div id="au"></div>
     </div>
-    <div
+   <div
       id="g_id_onload"
       data-client_id=process.env.GOOGLE_CLIENT_ID
-      data-login_uri=http://localhost:3000/oneTap/callback
-      data-skip_prompt_cookie="nick"
+      data-login_uri=process.env.ONETAP_CALLBACK_URL_PLACEHOLDER data-skip_prompt_cookie="nick"
       data-use_fedcm_for_prompt="false"
     ></div>
     <div class="container">

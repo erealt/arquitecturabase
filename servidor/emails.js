@@ -1,11 +1,11 @@
 const nodemailer = require('nodemailer');
- const url="http://localhost:3000/"; 
+ const url=process.env.BASE_URL || "http://localhost:3000/";
  //const url="tu-url-de-despliegue"; 
  const transporter = nodemailer.createTransport({
      service: 'gmail', 
      auth: { 
-        user: 'estelaretin10@gmail.com',
-         pass: 'rkfl nfcn csle whvo' 
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
         } 
     });
      //send();
