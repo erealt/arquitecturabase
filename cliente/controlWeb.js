@@ -42,18 +42,31 @@ this.comprobarSesion=function(){
         cw.mostrarMensaje("Bienvenido al sistema, "+nick); 
         $("#iniciarSesion").hide();
        
+       
     } else{ 
         //cw.mostrarAgregarUsuario();
         cw.mostrarLogin();
         $("#salir").hide();
         
          } }
+    this.gestionarNav = function(loggeado) {
+    if (loggeado) {
+        $("#iniciarSesion").hide(); // Ocultar "Iniciar Sesion"
+        $("#registroNav").hide(); // Ocultar "Registrarse"
+        $("#salir").show(); // Mostrar "Salir"
+    } else {
+        $("#iniciarSesion").show(); // Mostrar "Iniciar Sesion"
+        $("#registroNav").show(); // Mostrar "Registrarse"
+        $("#salir").hide(); // Ocultar "Salir"
+    }
+};
 
 this.mostrarMensaje = function(msg) {
         // Elimina el formulario de agregar usuario si existe
         $("#mAU").remove(); 
 
         $("#registro").html("");
+        this.gestionarNav(true);
         // Inyecta el mensaje de bienvenida en el contenedor principal
         $("#au").html('<div id="bnv"><h3>' + msg + '</h3></div>');
     };
@@ -62,6 +75,7 @@ this.salir = function() {
         // localStorage.removeItem("nick");
         location.reload();
         rest.cerrarSesion();
+        this.gestionarNav(false);
     };
 // 2. Método para asociar el evento a los elementos estáticos del nav
     this.inicializarNav = function() {
