@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
- const url=process.env.BASE_URL || "http://localhost:3000/";
+ const url=process.env.BASE_URL || "http://localhost:3000";
  //const url="tu-url-de-despliegue"; 
+
  const transporter = nodemailer.createTransport({
      service: 'gmail', 
      auth: { 
@@ -21,7 +22,7 @@ const nodemailer = require('nodemailer');
                     <table width="100%" cellspacing="0" cellpadding="0">
                         <tr>
                             <td align="center" style="padding: 20px 0;">
-                                <a href="${url}confirmarUsuario/${direccion}/${key}" target="_blank"
+                                <a href="${url}/confirmarUsuario/${direccion}/${key}" target="_blank"
                                    style="display: inline-block; padding: 12px 24px; font-size: 16px; color: #ffffff; background-color: #007bff; border-radius: 5px; text-decoration: none;">
                                    Pulsa aquí para confirmar cuenta
                                 </a>
