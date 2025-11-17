@@ -15,10 +15,10 @@ html,body{
   color: #fff;
 }
 
-/* Background image (user-provided) */
+
 body{
-  /* Use user-provided background image; fallback to gradient if missing */
-  background-image: url('./cliente/img/fondo.jpeg'), linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+  
+    background-image:  url('/cliente/img/fondo.png'), linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
   background-size: cover, auto;
   background-position: center center, center center;
   background-attachment: fixed, scroll;
