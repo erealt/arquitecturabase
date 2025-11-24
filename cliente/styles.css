@@ -175,11 +175,11 @@ body{
   color: #fff;
 }
 
-/* Message area */
+
 #msg{
   margin-top: 1rem;
   text-align:center;
-  color: #fff;
+  color: #090909;
 }
 
 /* Mobile tweaks */

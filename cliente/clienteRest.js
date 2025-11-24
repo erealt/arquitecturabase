@@ -21,6 +21,7 @@ this.registrarUsuario=function(email,password){
                 //  Mensaje en caso de nick/email ocupado
                 console.log("El nick está ocupado");
                 cw.mostrarMensaje("El email ya está registrado.");
+                cw.mostrarModal("No se ha podido registrar el usuario.");
             }
         },
         error:function(xhr, textStatus, errorThrown){
@@ -143,7 +144,8 @@ this.registrarUsuario=function(email,password){
                            else{ 
                             console.log("El nick está ocupado");
                             cw.mostrarMensajeFormulario("El email o nick ya está registrado. Intente iniciar sesión.", "#fmRegistro");
-                            
+                            cw.mostrarModal("No se ha podido registrar el usuario.");
+
 
                         } 
                     }, 
@@ -168,7 +170,8 @@ this.registrarUsuario=function(email,password){
             } else{
                 console.log("No se pudo iniciar sesión");
                 cw.mostrarMensajeFormulario("La cuenta no ha sido verificada, mire el correo.", "#fmLogin");
-                // cw.mostrarLogin(); // Volver a mostrar el login si falla
+                cw.mostrarModal("No se pudo iniciar sesión. La cuenta no ha sido verificada, mire el correo.");
+                 
             }
         },
         error:function(xhr, textStatus, errorThrown) {

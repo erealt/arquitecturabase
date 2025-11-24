@@ -72,10 +72,29 @@
     </div>
    <div
       id="g_id_onload"
-      data-client_id=process.env.GOOGLE_CLIENT_ID
-      data-login_uri=process.env.ONETAP_CALLBACK_URL_PLACEHOLDER data-skip_prompt_cookie="nick"
+       data-client_id=process.env.GOOGLE_CLIENT_ID
+      data-login_uri=process.env.ONETAP_CALLBACK_URL_PLACEHOLDER
+       data-skip_prompt_cookie="nick"
       data-use_fedcm_for_prompt="false"
     ></div>
+    <!-- The Modal --> 
+     <div class="modal" id="miModal">
+       <div class="modal-dialog">
+         <div class="modal-content">
+           <!-- Modal Header --> 
+            <div class="modal-header"> 
+              <h4 class="modal-title">Atención</h4> 
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+             </div> 
+             <!-- Modal body --> 
+              <div class="modal-body" id="mBody">  </div>
+               <!-- Modal footer -->
+                 <div class="modal-footer">
+                   <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button> 
+                  </div>
+          </div>
+        </div>
+      </div>
     <!-- removed duplicate elements (now inside center-panel) -->
     <script>
       cw = new ControlWeb();

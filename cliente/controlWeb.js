@@ -70,6 +70,15 @@ this.mostrarMensaje = function(msg) {
         // Inyecta el mensaje de bienvenida en el contenedor principal
         $("#au").html('<div id="bnv"><h3>' + msg + '</h3></div>');
     };
+this.mostrarModal = function(m){
+        $('#msg').remove();
+        if (m){
+            const cadena = "<div id='msg'>"+m+"</div>";
+            $('#mBody').append(cadena);
+        }
+        $('#miModal').modal('show');
+    };
+
 this.salir = function() {
         $.removeCookie("nick");
         // localStorage.removeItem("nick");
