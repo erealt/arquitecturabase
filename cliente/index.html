@@ -18,9 +18,11 @@
     <!-- Bootstrap 4 JS -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <!-- Tus scripts -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script src="./cliente/clienteRest.js"></script>
     <script src="./cliente/controlWeb.js"></script>
+    <script src="./cliente/clienteWS.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
@@ -87,7 +89,7 @@
               <button type="button" class="close" data-dismiss="modal">&times;</button>
              </div> 
              <!-- Modal body --> 
-              <div class="modal-body" id="mBody">  </div>
+              <div class="modal-body" id="miBody">  </div>
                <!-- Modal footer -->
                  <div class="modal-footer">
                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button> 
@@ -95,13 +97,20 @@
           </div>
         </div>
       </div>
-    <!-- removed duplicate elements (now inside center-panel) -->
+    
     <script>
-      cw = new ControlWeb();
-      rest = new ClienteRest(cw);
+      function ini(){
+        cw = new ControlWeb();
+        rest = new ClienteRest(cw);
 
-      cw.comprobarSesion();
-      cw.inicializarNav();
+        cw.comprobarSesion();
+        cw.inicializarNav();
+        // Iniciar cliente WS si existe
+        try{ ws = new ClienteWS(); }catch(e){ console.warn('ClienteWS no disponible:', e.message || e); }
+      }
+
+      // Llamada inmediata a la inicialización
+      ini();
     </script>
    
     

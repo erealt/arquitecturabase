@@ -1,5 +1,6 @@
 function ControlWeb() {
    
+   
     this.mostrarAgregarUsuario = function() {
         // Construye el HTML del formulario como una cadena
         let cadena = '';
@@ -71,12 +72,15 @@ this.mostrarMensaje = function(msg) {
         $("#au").html('<div id="bnv"><h3>' + msg + '</h3></div>');
     };
 this.mostrarModal = function(m){
-        $('#msg').remove();
-        if (m){
-            const cadena = "<div id='msg'>"+m+"</div>";
-            $('#mBody').append(cadena);
-        }
-        $('#miModal').modal('show');
+    // Quitar cualquier mensaje previo
+    $('#msg').remove();
+    // Log para depuración
+    console.log('mostrarModal llamado con:', m);
+    // Construir contenido y escribir en el body correcto
+    const cadena = "<div class='modal-msg' id='msg'>" + (m || '') + "</div>";
+    $('#miBody').html(cadena);
+    // Mostrar modal
+    $('#miModal').modal('show');
     };
 
 this.salir = function() {
@@ -117,6 +121,7 @@ this.mostrarMensajeFormulario = function(msg, formularioSelector) {
     }
 };
     this.mostrarRegistro=function(){
+            console.log('ControlWeb: mostrarRegistro llamado');
          $("#fmRegistro").remove();
          cw.limpiar(); // Limpia cualquier formulario anterior (registro o login)
           $("#registro").load("./cliente/registro.html",function(){
@@ -137,6 +142,7 @@ this.mostrarMensajeFormulario = function(msg, formularioSelector) {
                 cw.mostrarBotonGoogle();
              }
     this.mostrarLogin=function(){
+        console.log('ControlWeb: mostrarLogin llamado');
         cw.limpiar(); // Limpia cualquier formulario anterior (registro o login)
         
         // 1. Mostrar el formulario de Login Local en el contenedor #registro

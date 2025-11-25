@@ -8,10 +8,19 @@ const app = express();
 const passport=require("passport");
 const cookieSession=require("cookie-session");
 require("./servidor/passport-setup.js");
-const modelo = require("./servidor/modelo.js"); 
 const PORT = process.env.PORT || 3000; 
 const bodyParser=require("body-parser");
 const LocalStrategy = require('passport-local').Strategy;
+const httpServer = require('http').Server(app); 
+const modelo = require("./servidor/modelo.js"); 
+const { Server } = require("socket.io");
+const moduloWS = require("./servidor/servidorWS.js");
+
+
+let ws = new moduloWS.ServidorWS(); 
+let io = new Server();
+
+     
 
 const haIniciado=function(request,response,next){ 
   if (request.user){ 
@@ -20,6 +29,7 @@ const haIniciado=function(request,response,next){
     response.redirect("/") // Redirige a la página principal (login)
   } 
 }
+
 
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
@@ -31,6 +41,14 @@ app.use(cookieSession({
    name: 'Sistema', keys: ["key1","key2"] }));
 app.use(passport.initialize()); 
 app.use(passport.session());
+
+httpServer.listen(PORT, () => { 
+  console.log(`App está escuchando en el puerto ${PORT}`);
+   console.log('Ctrl+C para salir'); });
+    io.listen(httpServer);
+
+  ws.lanzarServidor(io, sistema);
+
 app.get("/auth/google",passport.authenticate('google', { scope: ['profile','email'] }));
 
  app.get("/", function(request,response){
@@ -85,6 +103,7 @@ app.get("/good", function(request,response){
         response.redirect('/');
        });
        });
+
   app.post('/oneTap/callback', 
     passport.authenticate('google-one-tap', { failureRedirect: '/fallo' }),
      function(req, res) { 
@@ -130,6 +149,4 @@ function(email,password,done){
     ));
 
 
-       app.listen(PORT, () => { 
-        console.log(`App está escuchando en el puerto ${PORT}`); 
-       console.log('Ctrl+C para salir'); });
+   

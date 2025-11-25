@@ -33,6 +33,13 @@ async function initTransporter(){
     }
     return transporter;
 }
+// gv.obtenerOptions(function(opts){
+//     fromAddress = opts.user;
+//     transporter = nodemailer.createTransport({ 
+//         service: 'gmail',
+//          auth: opts 
+//         });
+// });
 
 module.exports.enviarEmail = async function(direccion, key, men) {
     await initTransporter();
