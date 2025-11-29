@@ -31,8 +31,7 @@ Las pruebas unitarias se han implementado con Jasmine y cubren los métodos prin
 
 ## 🌐 Despliegue
 
-El prototipo se despliega en **Google Cloud Run**. Para más información sobre cómo desplegarlo, consulta el bloque 7 del documento de prácticas.
-
+El prototipo se despliega en **Google Cloud Run**. 
 ## 📄 Licencia
 
 Este proyecto está bajo la licencia MIT.
