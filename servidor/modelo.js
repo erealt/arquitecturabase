@@ -87,12 +87,14 @@ function Sistema(test){
         return Object.keys(this.usuarios).length;
     }
    this.loginUsuario=function(obj,callback) { 
+    let self=this;
     this.cad.buscarUsuario({"email":obj.email,"confirmada":true},function(usr){
         if(usr){
                 // Compara la contraseña que llega (texto plano) con el hash guardado (usr.password)
                 bcrypt.compare(obj.password, usr.password, function(err, result) {
                     if (result) {
                         // Las contraseñas coinciden
+                        self.agregarUsuario(usr);
                         callback(usr);
                     } else {
                         // Las contraseñas NO coinciden
