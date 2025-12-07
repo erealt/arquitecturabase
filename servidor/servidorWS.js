@@ -18,7 +18,7 @@ function ServidorWS(io) {
                     "codigo": codigo,
                     "email": datos.email,
                 });
-                let lista = sistema.obtenerPartidasDisponibles();
+                let lista = srv.sistema.obtenerPartidasDisponibles();
                 srv.enviarATodosMenosRemitente(socket, "listaPartidas", lista);
             });
 

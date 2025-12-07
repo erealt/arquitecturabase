@@ -10,7 +10,8 @@ function ClienteWS() {
          console.log(datos.codigo);
          ws.codigo = datos.codigo;
          if (typeof cw !== 'undefined' && cw.mostrarMensaje) {
-            cw.mostrarMensaje("Se ha creado la partida con código: " + datos.codigo, 'info');
+            //cw.mostrarMensaje("Se ha creado la partida con código: " + datos.codigo, 'info');
+            cw.mostrarEsperandoRival();
          }
       });
       this.socket.on("unidoAPartida", function (datos) {
@@ -18,6 +19,8 @@ function ClienteWS() {
             console.log("Unido a partida: " + datos.codigo);
             ws.codigo = datos.codigo; // Almacenar el código
             // cw mostrar juego o sala de espera
+            //cw.mostrarMensaje(`Te has unido a la partida ${datos.codigo}`);
+            cw.mostrarEsperandoRival();
          } else {
             console.error("Error al unirse a partida:", datos.codigo === -2 ? "Partida llena" : "Código inválido");
          }
@@ -27,6 +30,16 @@ function ClienteWS() {
          console.log(lista);
          if (typeof cw !== 'undefined' && cw.mostrarListaPartidas) {
             cw.mostrarListaPartidas(lista);
+         }
+      });
+      this.socket.on("jugadorUnido", function (emailRival) {
+         console.log(`¡Rival encontrado! ${emailRival} se ha unido.`);
+
+         if (typeof cw !== 'undefined' && cw.mostrarMensaje) {
+            cw.mostrarMensaje(`¡Rival encontrado! Partida ${ws.codigo} lista.`);
+            // Aquí llamarías a cw.iniciarJuego()
+         }else {
+            cw.mostrarEsperandoRival();
          }
       });
 
@@ -46,9 +59,9 @@ function ClienteWS() {
    this.unirAPartida = function (codigo) {
       this.socket.emit("unirAPartida", { "email": this.email, "codigo": codigo });
    }
-   this.obtenerListaPartidas=function(){
-        this.socket.emit("obtenerListaPartidas");
-    }
+   this.obtenerListaPartidas = function () {
+      this.socket.emit("obtenerListaPartidas");
+   }
 
 
 }

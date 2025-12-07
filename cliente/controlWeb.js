@@ -70,6 +70,7 @@ this.mostrarMensaje = function(msg) {
         this.gestionarNav(true);
         // Inyecta el mensaje de bienvenida en el contenedor principal
         $("#au").html('<div id="bnv"><h3>' + msg + '</h3></div>');
+        this.mostrarMenuPartidas();
     };
 this.mostrarModal = function(m){
     // Quitar cualquier mensaje previo
@@ -192,5 +193,93 @@ this.mostrarMensajeFormulario = function(msg, formularioSelector) {
     // También puedes borrar el mensaje de bienvenida si existe
         $("#bnv").remove();
 }
+// En cliente/controlWeb.js (dentro de function ControlWeb())
+
+// ... (métodos existentes)
+
+this.mostrarMenuPartidas = function() {
+    cw.limpiar();
+    this.gestionarNav(true);
+    $("#au").html(`
+        <div id="partidas-menu">
+            <h2>Gestión de Partidas</h2>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <button id="btnCrearPartida" class="btn btn-cta btn-lg btn-pill w-100">
+                        Crear Partida y Esperar Rival
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <div id="listaPartidasContainer">
+                        <h4>Partidas Disponibles:</h4>
+                        <div id="listaPartidas">
+                            <p class="text-muted">No hay partidas abiertas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `);
+
+    // Asignar eventos
+    $("#btnCrearPartida").on("click", function() {
+        ws.crearPartida(); // Llama al método WS implementado
+    });
+};
+
+this.mostrarEsperandoRival = function() {
+    $("#listaPartidasContainer").remove();
+    $("#partidas-menu").html(`
+        <div class="text-center py-5">
+            <h3>Partida creada con código: ${ws.codigo}</h3>
+            <p class="lead">Esperando a que un rival se una...</p>
+            <div class="spinner-border text-info" role="status">
+                <span class="sr-only">Cargando...</span>
+            </div>
+            <button id="btnAbandonarPartida" class="btn btn-ghost btn-pill mt-4">Abandonar Partida</button>
+        </div>
+    `);
+    
+    // Evento para abandonar (pendiente de implementar en el modelo/WS)
+    $("#btnAbandonarPartida").on("click", function() {
+       
+        cw.mostrarMenuPartidas();
+    });
+};
+
+this.mostrarListaPartidas = function(lista) {
+    let html = '';
+    
+    if (lista.length === 0) {
+        html = '<p class="text-muted">No hay partidas abiertas.</p>';
+    } else {
+        html = '<table class="table table-dark table-striped mt-3"><thead><tr><th>Código</th><th>Creador</th><th>Acción</th></tr></thead><tbody>';
+        
+        lista.forEach(function(partida) {
+            html += `
+                <tr>
+                    <td>${partida.codigo}</td>
+                    <td>${partida.creador}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success btn-unirse" data-codigo="${partida.codigo}">
+                            Unirse
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        html += '</tbody></table>';
+    }
+    
+    $("#listaPartidas").html(html);
+
+    // Asignar evento a los botones "Unirse"
+    $(".btn-unirse").on("click", function() {
+        const codigo = $(this).data("codigo");
+        ws.unirAPartida(codigo);
+    });
+};
+
+
 
 }
