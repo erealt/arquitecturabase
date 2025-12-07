@@ -10,6 +10,7 @@ function Sistema(test){
     this.usuarios={};
     
     this.partidas = {};
+    this.usuariosPorEmail = {}; 
     
     
     this.registrarUsuario=function(obj,callback){
