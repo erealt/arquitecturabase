@@ -192,4 +192,5 @@ this.mostrarMensajeFormulario = function(msg, formularioSelector) {
     // También puedes borrar el mensaje de bienvenida si existe
         $("#bnv").remove();
 }
+
 }

@@ -16,6 +16,7 @@ this.registrarUsuario=function(email,password){
                 cw.limpiar();
                 // cw.mostrarMensaje("Bienvenido al sistema, "+data.nick + ". Confirma tu cuenta en el email.");
                 cw.mostrarMensaje("¡Registro exitoso! Por favor, inicia sesión a continuación.");
+        
                 // Ahora que está registrado, le mostramos el login
                 cw.mostrarLogin(); //  Usamos el método que vamos a implementar
             } else{
@@ -149,8 +150,14 @@ this.registrarUsuario=function(email,password){
             if (data.nick!=-1){
                 console.log("Usuario "+data.nick+" ha iniciado sesión");
                 $.cookie("nick", data.nick);
+                        // Asignar email a ws para WebSockets (depuración incluida)
+                        
+                 ws.email = data.nick ;       
                 cw.limpiar();
                 cw.mostrarMensaje ("Bienvenido al sistema, "+data.nick);
+                
+                
+                console.log("Email asignado a ws:", ws.email);
             } else{
                 console.log("No se pudo iniciar sesión");
                 cw.mostrarMensajeFormulario("La cuenta no ha sido verificada, mire el correo.", "#fmLogin");

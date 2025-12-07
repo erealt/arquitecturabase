@@ -99,9 +99,11 @@
       </div>
     
     <script>
+      var cw, rest, ws;
       function ini(){
         cw = new ControlWeb();
         rest = new ClienteRest(cw);
+        
 
         cw.comprobarSesion();
         cw.inicializarNav();
