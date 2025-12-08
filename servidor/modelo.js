@@ -72,7 +72,11 @@ function Sistema(test){
     return res;
 }
     this.usuarioGoogle=function(usr,callback){ 
+        let self=this;
         this.cad.buscarOCrearUsuario(usr,function(obj){ 
+            if (obj && obj.email && obj.email !== -1) {
+             self.agregarUsuario(obj);
+        }
             callback(obj); });
          } 
     this.obtenerUsuario=function(){ 

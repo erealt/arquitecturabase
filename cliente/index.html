@@ -104,11 +104,15 @@
         cw = new ControlWeb();
         rest = new ClienteRest(cw);
         
+        // Iniciar cliente WS si existe
+        try{ ws = new ClienteWS(); 
 
+        }catch(e){
+           console.warn('ClienteWS no disponible:', e.message || e); 
+          }
         cw.comprobarSesion();
         cw.inicializarNav();
-        // Iniciar cliente WS si existe
-        try{ ws = new ClienteWS(); }catch(e){ console.warn('ClienteWS no disponible:', e.message || e); }
+        
       }
 
       // Llamada inmediata a la inicialización
