@@ -251,6 +251,26 @@ function ControlWeb() {
             cw.mostrarMenuPartidas();
         });
     };
+    this.mostrarPartidaLista = function(codigo, emailRival) {
+    // 1. Limpiar el contenedor principal (partidas-menu)
+    $("#partidas-menu").remove();
+    $("#au").html(''); 
+    
+    // 2. Mostrar la nueva interfaz de "Lista para Jugar"
+    $("#au").html(`
+        <div class="text-center py-5" id="partida-lista-view">
+            <h3>¡PARTIDA LISTA! Código: ${codigo}</h3>
+            <p class="lead">Rival encontrado: ${emailRival}</p>
+            <button id="btnIniciarJuego" class="btn btn-cta btn-lg btn-pill mt-4">¡INICIAR JUEGO!</button>
+        </div>
+    `);
+    
+    
+    $("#btnIniciarJuego").on("click", function() {
+        console.log("Iniciando el juego...");
+        // Aquí se llamaría a ws.iniciarJuego()
+    });
+};
 
     this.mostrarListaPartidas = function (lista) {
         let html = '';
