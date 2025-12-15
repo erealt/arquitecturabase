@@ -65,7 +65,7 @@ function ClienteWS() {
          console.log(`[CLIENTE] Partida ${datos.codigo} iniciada. Cambiando a vista de juego.`);
          // Llama al nuevo método de la interfaz
          if (typeof cw !== 'undefined' && cw.mostrarPantallaJuego) {
-            cw.mostrarPantallaJuego(datos.codigo);
+            cw.mostrarPantallaJuego(datos.codigo,datos.jugadores);
          }
       });
 

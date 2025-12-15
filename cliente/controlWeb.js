@@ -319,6 +319,17 @@ function ControlWeb() {
             </div>
         </div>
     `);
+    $.getScript("cliente/juego/constants.js", function() {
+        // 2. Añadir la lógica principal del juego DESPUÉS de las constantes
+        $.getScript("cliente/juego/game.js", function() {
+            // 3. Inicializar el juego una vez que los scripts estén cargados
+            if (typeof StartGameManager !== 'undefined') { // Asumiendo que game.js define StartGameManager
+                console.log(`[CW] Iniciando juego Jumpverse para la partida ${codigo}.`);
+                // Debes definir una función en game.js que inicie la lógica de Phaser/canvas
+                StartGameManager(codigo, players, ws.email); 
+            }
+        });
+    });
 
         // Aquí puedes añadir más lógica de inicialización del tablero
         console.log(`[CW] Pantalla de juego cargada para ${codigo}.`);
