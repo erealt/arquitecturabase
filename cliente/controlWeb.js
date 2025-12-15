@@ -43,7 +43,7 @@ function ControlWeb() {
 
             ws.email = nick;
             console.log("Email asignado a ws desde cookie:", ws.email);
-
+            ws.identificarUsuario(ws.email);
             cw.mostrarMensaje("Bienvenido al sistema, " + nick);
             $("#iniciarSesion").hide();
 
@@ -233,8 +233,10 @@ function ControlWeb() {
     };
 
     this.mostrarEsperandoRival = function () {
-        $("#listaPartidasContainer").remove();
-        $("#partidas-menu").html(`
+        $("#registro").empty();
+         $("#au").empty();
+
+        $("#au").html(`
         <div class="text-center py-5">
             <h3>Partida creada con código: ${ws.codigo}</h3>
             <p class="lead">Esperando a que un rival se una...</p>
@@ -253,8 +255,8 @@ function ControlWeb() {
     };
     this.mostrarPartidaLista = function(codigo, emailRival) {
     // 1. Limpiar el contenedor principal (partidas-menu)
-    $("#partidas-menu").remove();
-    $("#au").html(''); 
+     
+    $("#registro").empty();
     
     // 2. Mostrar la nueva interfaz de "Lista para Jugar"
     $("#au").html(`

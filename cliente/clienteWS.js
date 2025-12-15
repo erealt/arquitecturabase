@@ -9,7 +9,7 @@ function ClienteWS() {
       this.socket.on("partidaCreada", function (datos) {
          console.log(datos.codigo);
          ws.codigo = datos.codigo;
-         if (typeof cw !== 'undefined' && cw.mostrarMensaje) {
+         if (typeof cw !== 'undefined' && cw.mostrarEsperandoRival) {
             //cw.mostrarMensaje("Se ha creado la partida con código: " + datos.codigo, 'info');
             cw.mostrarEsperandoRival();
          }
@@ -18,8 +18,10 @@ function ClienteWS() {
          if (datos.codigo != -1 && datos.codigo != -2) {
             console.log("Unido a partida: " + datos.codigo);
             ws.codigo = datos.codigo; // Almacenar el código
-            
-            //cw.mostrarEsperandoRival();
+            // if (typeof cw !== 'undefined' && cw.mostrarEsperandoInicio) {
+            //    cw.mostrarEsperandoInicio(ws.codigo);
+            // }
+
          } else {
             console.error("Error al unirse a partida:", datos.codigo === -2 ? "Partida llena" : "Código inválido");
          }
@@ -31,18 +33,45 @@ function ClienteWS() {
             cw.mostrarListaPartidas(lista);
          }
       });
-      
+      this.socket.on("partidaLista", function (datos) {
+         console.log(`¡Partida Lista! Código: ${datos.codigo}. Jugadores: ${datos.jugadores.join(', ')}`);
+         ws.codigo = datos.codigo;
 
-      this.socket.on("jugadorUnido", function (emailRival) {
-         console.log(`¡Rival encontrado! ${emailRival} se ha unido.`);
+         // Identificar mi email (ws.email) y el del rival
+         let miEmail = ws.email;
+         // El email del rival es el otro email en la lista de jugadores
+         let rivalEmail = datos.jugadores.find(email => email !== miEmail);
 
-         if (typeof cw !== 'undefined' && cw.mostrarPartidaLista) {
-            cw.mostrarPartidaLista(ws.codigo, emailRival);
-         } else {
-            console.error("Error: cw.mostrarPartidaLista no está definido o es inaccesible.");
-            }
+         let esCreador = datos.jugadores[0] === miEmail;
+         console.log(`DIAGNÓSTICO P1 - Mi Email: ${miEmail}`);
+         console.log(`DIAGNÓSTICO P1 - Es Creador: ${esCreador}`);
+         console.log(`DIAGNÓSTICO P1 - Rival Email: ${rivalEmail}`);
+         if (typeof cw === 'undefined' || !cw.mostrarPartidaLista) {
+            console.error("CRÍTICO: El controlador 'cw' o el método 'mostrarPartidaLista' no están disponibles.");
+            return; // Detiene la ejecución si no puede mostrar la pantalla
          }
-      );
+
+
+         if (esCreador) {
+            cw.mostrarPartidaLista(ws.codigo, rivalEmail);
+         } else {
+            // El Rival (P2) ya está en 'mostrarEsperandoInicio' (desde unidoAPartida).
+            // No necesita hacer nada más con esta señal, a menos que quieras actualizar un mensaje.
+            console.log("Rival: Partida lista confirmada. Esperando al Creador para iniciar.");
+         }
+
+      });
+
+      // this.socket.on("jugadorUnido", function (emailRival) {
+      //    console.log(`¡Rival encontrado! ${emailRival} se ha unido.`);
+
+      //    if (typeof cw !== 'undefined' && cw.mostrarPartidaLista) {
+      //       cw.mostrarPartidaLista(ws.codigo, emailRival);
+      //    } else {
+      //       console.error("Error: cw.mostrarPartidaLista no está definido o es inaccesible.");
+      //       }
+      //    }
+      // );
 
 
    }
@@ -62,6 +91,9 @@ function ClienteWS() {
    this.obtenerListaPartidas = function () {
       this.socket.emit("obtenerListaPartidas");
    }
+   this.identificarUsuario = function (email) {
+    this.socket.emit("identificar", { email: email });
+}
 
 
 }

@@ -152,11 +152,15 @@ this.registrarUsuario=function(email,password){
                 $.cookie("nick", data.nick);
                         // Asignar email a ws para WebSockets (depuración incluida)
                         
-                 ws.email = data.nick ;       
+                 ws.email = data.nick ; 
+
                 cw.limpiar();
                 cw.mostrarMensaje ("Bienvenido al sistema, "+data.nick);
                 
-                
+                if (typeof ws !== 'undefined' && ws.identificarUsuario) {
+                    ws.identificarUsuario(ws.email);
+                    console.log("DEBUG: ws.identificarUsuario llamado después del Login Local.");
+                }
                 console.log("Email asignado a ws:", ws.email);
             } else{
                 console.log("No se pudo iniciar sesión");
