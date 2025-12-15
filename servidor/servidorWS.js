@@ -95,6 +95,26 @@ function ServidorWS(io) {
                 let lista = sistema.obtenerPartidasDisponibles();
                 srv.enviarAlRemitente(socket, "listaPartidas", lista);
             });
+            socket.on("iniciarJuego", function (datos) {
+    let codigo = datos.codigo;
+    console.log(`[SERVIDOR] Solicitud para iniciar partida: ${codigo}`);
+    
+    // 1. Verificar y cambiar estado de la partida (usando tu objeto sistema)
+    let partida = srv.sistema.iniciarPartida(codigo);
+    
+    if (partida && partida.codigo) {
+        // 2. Notificar a TODOS los jugadores en la sala que el juego empieza
+        srv.io.sockets.in(codigo).emit('partidaIniciada', { "codigo": codigo });
+        console.log(`[SERVIDOR] Partida ${codigo} iniciada y notificada a la sala.`);
+        
+        // Opcional: Actualizar la lista global de partidas si es necesario
+        // let lista = srv.sistema.obtenerPartidasDisponibles();
+        // srv.enviarGlobal(srv.io, "listaPartidas", lista);
+    } else {
+        // Manejar error si la partida no existe o no se puede iniciar
+        console.error(`[SERVIDOR] Error al iniciar partida ${codigo}.`);
+    }
+});
 
 
         });

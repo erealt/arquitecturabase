@@ -211,6 +211,25 @@ function Sistema(test) {
         }
         return lista;
     };
+    this.iniciarPartida = function (codigo) {
+    // 1. Buscar la partida
+    let partida = this.partidas[codigo]; 
+
+    if (partida) {
+        // 2. Verificar estado (Opcional, pero recomendado)
+        // if (partida.estado === "Lista") { ... } 
+        
+        // 3. Cambiar el estado
+        partida.estado = "EnJuego";
+        console.log(`Sistema: Partida ${codigo} cambiada a estado 'EnJuego'.`);
+        
+        // 4. Devolver la partida
+        return partida;
+    } else {
+        console.error(`Sistema: No se encontró la partida con código ${codigo}.`);
+        return -1; // O maneja el error según tu convención
+    }
+};
 }
 function Usuario(o) {
     if (typeof o === 'string') {

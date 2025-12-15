@@ -61,6 +61,13 @@ function ClienteWS() {
          }
 
       });
+      this.socket.on("partidaIniciada", function (datos) {
+         console.log(`[CLIENTE] Partida ${datos.codigo} iniciada. Cambiando a vista de juego.`);
+         // Llama al nuevo método de la interfaz
+         if (typeof cw !== 'undefined' && cw.mostrarPantallaJuego) {
+            cw.mostrarPantallaJuego(datos.codigo);
+         }
+      });
 
       // this.socket.on("jugadorUnido", function (emailRival) {
       //    console.log(`¡Rival encontrado! ${emailRival} se ha unido.`);
@@ -92,8 +99,18 @@ function ClienteWS() {
       this.socket.emit("obtenerListaPartidas");
    }
    this.identificarUsuario = function (email) {
-    this.socket.emit("identificar", { email: email });
-}
+      this.socket.emit("identificar", { email: email });
+
+   }
+   this.iniciarJuego = function () {
+      if (this.codigo) {
+         console.log(`Cliente WS: Solicitando iniciar partida ${this.codigo}`);
+         // Emite el evento con el código de la partida actual
+         this.socket.emit("iniciarJuego", { "codigo": this.codigo });
+      } else {
+         console.error("No hay código de partida para iniciar.");
+      }
+   }
 
 
 }

@@ -234,7 +234,7 @@ function ControlWeb() {
 
     this.mostrarEsperandoRival = function () {
         $("#registro").empty();
-         $("#au").empty();
+        $("#au").empty();
 
         $("#au").html(`
         <div class="text-center py-5">
@@ -253,26 +253,26 @@ function ControlWeb() {
             cw.mostrarMenuPartidas();
         });
     };
-    this.mostrarPartidaLista = function(codigo, emailRival) {
-    // 1. Limpiar el contenedor principal (partidas-menu)
-     
-    $("#registro").empty();
-    
-    // 2. Mostrar la nueva interfaz de "Lista para Jugar"
-    $("#au").html(`
+    this.mostrarPartidaLista = function (codigo, emailRival) {
+        // 1. Limpiar el contenedor principal (partidas-menu)
+
+        $("#registro").empty();
+
+        // 2. Mostrar la nueva interfaz de "Lista para Jugar"
+        $("#au").html(`
         <div class="text-center py-5" id="partida-lista-view">
             <h3>¡PARTIDA LISTA! Código: ${codigo}</h3>
             <p class="lead">Rival encontrado: ${emailRival}</p>
             <button id="btnIniciarJuego" class="btn btn-cta btn-lg btn-pill mt-4">¡INICIAR JUEGO!</button>
         </div>
     `);
-    
-    
-    $("#btnIniciarJuego").on("click", function() {
-        console.log("Iniciando el juego...");
-        // Aquí se llamaría a ws.iniciarJuego()
-    });
-};
+
+
+        $("#btnIniciarJuego").on("click", function () {
+            console.log("Iniciando el juego...");
+            ws.iniciarJuego()
+        });
+    };
 
     this.mostrarListaPartidas = function (lista) {
         let html = '';
@@ -307,6 +307,22 @@ function ControlWeb() {
         });
     };
 
+    this.mostrarPantallaJuego = function (codigo) {
+        cw.limpiar(); // Limpia el lobby o la vista anterior
+
+        $("#au").html(`
+        <div class="text-center py-5">
+            <h2>🎮 ¡Juego Iniciado! (Código: ${codigo})</h2>
+            <p class="lead">Esta es la pantalla de juego vacía. Aquí se cargará el tablero.</p>
+            <div id="tableroJuego" style="min-height: 400px; border: 1px solid #ccc; margin: 20px auto;">
+                <p>Esperando la lógica del juego...</p>
+            </div>
+        </div>
+    `);
+
+        // Aquí puedes añadir más lógica de inicialización del tablero
+        console.log(`[CW] Pantalla de juego cargada para ${codigo}.`);
+    };
 
 
 }
