@@ -1,3 +1,8 @@
+const WORLD = {
+    WIDTH: 960,
+    HEIGHT: 2400 // El alto del mundo de juego
+};
+const players = {};
 function ServidorWS(io) {
     const srv = this;
     this.io = undefined;
@@ -24,6 +29,49 @@ function ServidorWS(io) {
             socket.on("identificar", function (datos) {
                 srv.socketsActivos[datos.email] = socket;
                 console.log(`[WS ID] Usuario ${datos.email} identificado y socket almacenado.`);
+            });
+            if (!players[socket.id]) {
+                players[socket.id] = {
+                    id: socket.id,
+                    // Posición inicial por defecto (arriba del mundo para que caiga)
+                    x: Math.floor(Math.random() * (WORLD.WIDTH - 200)) + 100,
+                    y: WORLD.HEIGHT - 60 - 32,
+                    color: '#' + Math.floor(Math.random() * 16777215).toString(16),
+                    name: 'Player_' + socket.id.slice(0, 4),
+                    // Puedes añadir vidas, puntuación, etc.
+                };
+
+                // Opcional: Notificar a otros jugadores sobre el nuevo jugador
+                socket.broadcast.emit('newPlayer', players[socket.id]);
+
+                // Opcional: Enviar al cliente actual el estado inicial de todos (usado en game.js)
+                socket.emit('currentPlayers', players);
+            }
+
+
+            // 2. Manejar movimiento de jugador (playerMovement)
+            // Este evento es enviado por game.js en el cliente en cada frame
+            socket.on('playerMovement', (data) => {
+                if (players[socket.id]) {
+                    // Actualizar datos del jugador en el servidor
+                    players[socket.id].x = data.x;
+                    players[socket.id].y = data.y;
+                    players[socket.id].vx = data.vx;
+                    players[socket.id].vy = data.vy;
+
+                    // Emitir el movimiento a todos excepto al jugador actual
+                    // Si tuvieras salas de partidas, aquí usarías io.to(sala).except(socket.id).emit(...)
+                    socket.broadcast.emit('playerMoved', players[socket.id]);
+                }
+            });
+
+
+            // 3. Manejar desconexión
+            socket.on('disconnect', () => {
+                console.log('user disconnected', socket.id);
+                delete players[socket.id];
+                io.emit('playerDisconnected', socket.id);
+                // ... (Tu lógica de remover la partida o notificar al rival)
             });
             socket.on("crearPartida", function (datos) {
                 let codigo = sistema.crearPartida(datos.email);
@@ -96,25 +144,25 @@ function ServidorWS(io) {
                 srv.enviarAlRemitente(socket, "listaPartidas", lista);
             });
             socket.on("iniciarJuego", function (datos) {
-    let codigo = datos.codigo;
-    console.log(`[SERVIDOR] Solicitud para iniciar partida: ${codigo}`);
-    
-    // 1. Verificar y cambiar estado de la partida (usando tu objeto sistema)
-    let partida = srv.sistema.iniciarPartida(codigo);
-    
-    if (partida && partida.codigo) {
-        // 2. Notificar a TODOS los jugadores en la sala que el juego empieza
-        srv.io.sockets.in(codigo).emit('partidaIniciada', { "codigo": codigo });
-        console.log(`[SERVIDOR] Partida ${codigo} iniciada y notificada a la sala.`);
-        
-        // Opcional: Actualizar la lista global de partidas si es necesario
-        // let lista = srv.sistema.obtenerPartidasDisponibles();
-        // srv.enviarGlobal(srv.io, "listaPartidas", lista);
-    } else {
-        // Manejar error si la partida no existe o no se puede iniciar
-        console.error(`[SERVIDOR] Error al iniciar partida ${codigo}.`);
-    }
-});
+                let codigo = datos.codigo;
+                console.log(`[SERVIDOR] Solicitud para iniciar partida: ${codigo}`);
+
+                // 1. Verificar y cambiar estado de la partida (usando tu objeto sistema)
+                let partida = srv.sistema.iniciarPartida(codigo);
+
+                if (partida && partida.codigo) {
+                    // 2. Notificar a TODOS los jugadores en la sala que el juego empieza
+                    srv.io.sockets.in(codigo).emit('partidaIniciada', { "codigo": codigo });
+                    console.log(`[SERVIDOR] Partida ${codigo} iniciada y notificada a la sala.`);
+
+                    // Opcional: Actualizar la lista global de partidas si es necesario
+                    // let lista = srv.sistema.obtenerPartidasDisponibles();
+                    // srv.enviarGlobal(srv.io, "listaPartidas", lista);
+                } else {
+                    // Manejar error si la partida no existe o no se puede iniciar
+                    console.error(`[SERVIDOR] Error al iniciar partida ${codigo}.`);
+                }
+            });
 
 
         });

@@ -65,9 +65,11 @@ function ClienteWS() {
          console.log(`[CLIENTE] Partida ${datos.codigo} iniciada. Cambiando a vista de juego.`);
          // Llama al nuevo método de la interfaz
          if (typeof cw !== 'undefined' && cw.mostrarPantallaJuego) {
-            cw.mostrarPantallaJuego(datos.codigo,datos.jugadores);
+            cw.mostrarPantallaJuego(datos.codigo,datos.players);
          }
       });
+
+      
 
       // this.socket.on("jugadorUnido", function (emailRival) {
       //    console.log(`¡Rival encontrado! ${emailRival} se ha unido.`);
@@ -111,6 +113,41 @@ function ClienteWS() {
          console.error("No hay código de partida para iniciar.");
       }
    }
+
+
+this.jugarSolo = function () {
+    // 1. Generar un código de partida ficticio para el modo solo
+    // Esto es útil para el registro interno de la vista de juego.
+    const codigoSolo = "SOLO-" + Math.floor(Math.random() * 999999);
+    this.codigo = codigoSolo; 
+
+    // El jugador en modo solitario usa su propio ID de socket para la lógica del juego.
+    const myPlayerId = this.socket.id;
+    
+    // 2. Crear el objeto de jugadores iniciales (solo el jugador local).
+    // Usamos el ID del socket como clave, que es como el motor de juego (game.js) espera los datos.
+    const initialPlayers = {};
+    
+
+    initialPlayers[myPlayerId] = {
+        id: myPlayerId,
+        email: this.email,
+        // Usamos valores por defecto, game.js los ajustará:
+        x: 0, 
+        y: 0, 
+        color: '#FFFFFF', 
+        name: this.email.split('@')[0]
+    };
+
+    console.log(`[CLIENTE WS] Iniciando partida SOLO con código: ${codigoSolo}`);
+
+    // 3. Llamar directamente a la función de la ControlWeb para mostrar la pantalla de juego.
+    // Esto simula lo que el servidor haría con el evento 'partidaIniciada'.
+    if (typeof cw !== 'undefined' && cw.mostrarPantallaJuego) {
+        // Pasa el código y el objeto de jugadores 
+        cw.mostrarPantallaJuego(codigoSolo, initialPlayers); 
+    }
+};
 
 
 }

@@ -209,12 +209,17 @@ function ControlWeb() {
         <div id="partidas-menu">
             <h2>Gestión de Partidas</h2>
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                     <button id="btnCrearPartida" class="btn btn-cta btn-lg btn-pill w-100">
                         Crear Partida y Esperar Rival
                     </button>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4 mb-3">
+                    <button id="btnJugarSolo" class="btn btn-warning btn-lg btn-pill w-100">
+                        Jugar Solo
+                    </button>
+                </div>
+                <div class="col-md-4">
                     <div id="listaPartidasContainer">
                         <h4>Partidas Disponibles:</h4>
                         <div id="listaPartidas">
@@ -229,6 +234,9 @@ function ControlWeb() {
         // Asignar eventos
         $("#btnCrearPartida").on("click", function () {
             ws.crearPartida(); // Llama al método WS implementado
+        });
+        $("#btnJugarSolo").on("click", function () {
+            ws.jugarSolo();
         });
     };
 
@@ -255,10 +263,9 @@ function ControlWeb() {
     };
     this.mostrarPartidaLista = function (codigo, emailRival) {
         // 1. Limpiar el contenedor principal (partidas-menu)
-
         $("#registro").empty();
 
-        // 2. Mostrar la nueva interfaz de "Lista para Jugar"
+        // 2. Mostrar solo el botón, y al pulsarlo mostrar el canvas directamente
         $("#au").html(`
         <div class="text-center py-5" id="partida-lista-view">
             <h3>¡PARTIDA LISTA! Código: ${codigo}</h3>
@@ -267,10 +274,11 @@ function ControlWeb() {
         </div>
     `);
 
-
         $("#btnIniciarJuego").on("click", function () {
             console.log("Iniciando el juego...");
-            ws.iniciarJuego()
+            // Mostrar el canvas del juego directamente
+            cw.mostrarPantallaJuego(codigo, [ws.email, emailRival]);
+            ws.iniciarJuego();
         });
     };
 
@@ -307,32 +315,52 @@ function ControlWeb() {
         });
     };
 
-    this.mostrarPantallaJuego = function (codigo) {
-        cw.limpiar(); // Limpia el lobby o la vista anterior
-
+    this.mostrarPantallaJuego = function (codigo, initialPlayers) {
+        cw.limpiar();
+        
         $("#au").html(`
-        <div class="text-center py-5">
-            <h2>🎮 ¡Juego Iniciado! (Código: ${codigo})</h2>
-            <p class="lead">Esta es la pantalla de juego vacía. Aquí se cargará el tablero.</p>
-            <div id="tableroJuego" style="min-height: 400px; border: 1px solid #ccc; margin: 20px auto;">
-                <p>Esperando la lógica del juego...</p>
+        <div id="game-view" class="text-center py-5">
+
+            <div id="gameCanvasContainer" style="width: 960px; height: 540px; margin: 20px auto; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); overflow: hidden;">
+                <canvas 
+                    id="game" 
+                    width="960" 
+                    height="540" 
+                    style="width: 100%; height: 100%; display: block; background:#000;"
+                ></canvas> 
             </div>
         </div>
     `);
-    $.getScript("cliente/juego/constants.js", function() {
-        // 2. Añadir la lógica principal del juego DESPUÉS de las constantes
-        $.getScript("cliente/juego/game.js", function() {
-            // 3. Inicializar el juego una vez que los scripts estén cargados
-            if (typeof StartGameManager !== 'undefined') { // Asumiendo que game.js define StartGameManager
-                console.log(`[CW] Iniciando juego Jumpverse para la partida ${codigo}.`);
-                // Debes definir una función en game.js que inicie la lógica de Phaser/canvas
-                StartGameManager(codigo, players, ws.email); 
-            }
-        });
-    });
+        $.getScript("cliente/game/constants.js", function () {
+            console.log("[CW] Constantes de juego cargadas.");
 
-        // Aquí puedes añadir más lógica de inicialización del tablero
-        console.log(`[CW] Pantalla de juego cargada para ${codigo}.`);
+            $.getScript("cliente/game/game.js", function () {
+                console.log("[CW] Lógica del juego Jumpverse cargada.");
+
+                // 3. Inicializar el juego una vez que los scripts estén cargados
+                if (typeof StartGameManager !== 'undefined') {
+                    console.log(`[CW] Iniciando juego Jumpverse para la partida ${codigo}.`);
+                    // FIX 3: Pasamos la variable correcta (initialPlayers) recibida como argumento
+                    StartGameManager(codigo, initialPlayers, ws.email);
+                    setTimeout(function () {
+                        if (typeof window.startJumpverse === 'function') {
+                            const defaultSelection = { type: 'color', color: (window.CONFIG && window.CONFIG.PLAYER_COLOR) ? window.CONFIG.PLAYER_COLOR : '#ff0066' };
+                            window.startJumpverse(defaultSelection);
+                        } else {
+                            console.warn('startJumpverse no está disponible todavía.');
+                        }
+                    }, 0);
+                } else {
+                    console.error("ERROR CRÍTICO: StartGameManager no está definido en game.js.");
+                }
+            }).fail(function (jqxhr, settings, exception) {
+                console.error("Error al cargar game.js:", exception);
+            });
+        }).fail(function (jqxhr, settings, exception) {
+            console.error("Error al cargar constants.js:", exception);
+        });
+
+        console.log(`[CW] Contenedor de juego cargado para ${codigo}.`);
     };
 
 
