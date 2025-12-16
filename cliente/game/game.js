@@ -850,8 +850,7 @@ function StartGameManager(codigo, initialPlayers, myEmail) {
   };
   // 
 
-  // Hook menu UI
-  document.addEventListener('DOMContentLoaded', () => {
+  function initializeMenuUI() {
     const playBtn = document.getElementById('playBtn');
     if (!playBtn) {
       // No existe la UI original: arrancar directamente con selección por defecto
@@ -936,5 +935,11 @@ function StartGameManager(codigo, initialPlayers, myEmail) {
       for (const s of STARS) s.collected = false;
       gameOver = false;
     });
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeMenuUI);
+  } else {
+    initializeMenuUI();
+  }
 }

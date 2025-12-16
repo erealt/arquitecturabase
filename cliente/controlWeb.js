@@ -317,50 +317,37 @@ function ControlWeb() {
 
     this.mostrarPantallaJuego = function (codigo, initialPlayers) {
         cw.limpiar();
-        
-        $("#au").html(`
-        <div id="game-view" class="text-center py-5">
+        $("#menuNav").hide();
+        $("#registro").empty();
 
-            <div id="gameCanvasContainer" style="width: 960px; height: 540px; margin: 20px auto; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); overflow: hidden;">
-                <canvas 
-                    id="game" 
-                    width="960" 
-                    height="540" 
-                    style="width: 100%; height: 100%; display: block; background:#000;"
-                ></canvas> 
-            </div>
-        </div>
-    `);
-        $.getScript("cliente/game/constants.js", function () {
-            console.log("[CW] Constantes de juego cargadas.");
+        $("#au").load("/cliente/game/index.html", function (responseText, statusText, xhr) {
+            if (statusText === "error") {
+                console.error("Error al cargar cliente/game/index.html:", xhr.statusText);
+                $("#au").html("<div class='alert alert-danger'>No se pudo cargar la interfaz del juego.</div>");
+                return;
+            }
 
-            $.getScript("cliente/game/game.js", function () {
-                console.log("[CW] Lógica del juego Jumpverse cargada.");
+            $.getScript("cliente/game/constants.js", function () {
+                console.log("[CW] Constantes de juego cargadas.");
 
-                // 3. Inicializar el juego una vez que los scripts estén cargados
-                if (typeof StartGameManager !== 'undefined') {
-                    console.log(`[CW] Iniciando juego Jumpverse para la partida ${codigo}.`);
-                    // FIX 3: Pasamos la variable correcta (initialPlayers) recibida como argumento
-                    StartGameManager(codigo, initialPlayers, ws.email);
-                    setTimeout(function () {
-                        if (typeof window.startJumpverse === 'function') {
-                            const defaultSelection = { type: 'color', color: (window.CONFIG && window.CONFIG.PLAYER_COLOR) ? window.CONFIG.PLAYER_COLOR : '#ff0066' };
-                            window.startJumpverse(defaultSelection);
-                        } else {
-                            console.warn('startJumpverse no está disponible todavía.');
-                        }
-                    }, 0);
-                } else {
-                    console.error("ERROR CRÍTICO: StartGameManager no está definido en game.js.");
-                }
+                $.getScript("cliente/game/game.js", function () {
+                    console.log("[CW] Lógica del juego Jumpverse cargada.");
+
+                    if (typeof StartGameManager !== 'undefined') {
+                        console.log(`[CW] Iniciando juego Jumpverse para la partida ${codigo}.`);
+                        StartGameManager(codigo, initialPlayers, ws.email);
+                    } else {
+                        console.error("ERROR CRÍTICO: StartGameManager no está definido en game.js.");
+                    }
+                }).fail(function (jqxhr, settings, exception) {
+                    console.error("Error al cargar game.js:", exception);
+                });
             }).fail(function (jqxhr, settings, exception) {
-                console.error("Error al cargar game.js:", exception);
+                console.error("Error al cargar constants.js:", exception);
             });
-        }).fail(function (jqxhr, settings, exception) {
-            console.error("Error al cargar constants.js:", exception);
         });
 
-        console.log(`[CW] Contenedor de juego cargado para ${codigo}.`);
+        console.log(`[CW] Solicitando carga de contenedor de juego para ${codigo}.`);
     };
 
 
