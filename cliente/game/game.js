@@ -1,589 +1,480 @@
-let socket;
-let canvas;
-let ctx;
-let camera;
-let keys = {};
-let otherPlayers = {};
-let player;
-// ... (Declarar el resto de variables como playerSprite, assetsLoaded, gameOver, etc.)
-let assetsLoaded = false;
-let gameOver = false;
-function StartGameManager(codigo, initialPlayers, myEmail) {
-  console.log("GameManager: Inicializando Phaser/Lógica de juego...");
+// --- VARIABLES GLOBALES ---
+var socket, canvas, ctx, camara;
+var teclas = {};
+var otrosJugadores = {};
+var jugador;
+
+// Estado de Recursos (Assets)
+var jugadorSprite = new Image();
+var imagenFondo = null;
+var patronFondo = null;
+var canvasFondo = null;
+var ctxFondo = null;
+var recursosCargados = false;
+var imagenEnemigo = null;
+var enemigoCargado = false;
+var imagenEstrella = null;
+var estrellaCargada = false;
+
+// Estado de Audio
+var audioCtx = null;
+var bufferSalto = null;
+var gananciaSalto = null;
+var saltoCargado = false;
+var bufferEstrella = null;
+var gananciaEstrella = null;
+var sonidoEstrellaCargado = false;
+var bufferDaño = null;
+var gananciaDaño = null;
+var sonidoDañoCargado = false;
+
+// Estado del Juego
+var juegoTerminado = false;
+
+/**
+ * PUNTO DE ENTRADA PRINCIPAL
+ */
+function StartGameManager(codigo, jugadoresIniciales, miEmail) {
+  console.log("GameManager: Inicializando Lógica de juego...");
+  
   // Inicialización de Socket.io
   socket = ws.socket;
-
-
 
   // Inicialización de Canvas
   canvas = document.getElementById('game');
   if (!canvas) {
-    alert("Error: No se encontró el canvas con id 'game'. Asegúrate de que el HTML lo incluya antes de iniciar el juego.");
+    alert("Error: No se encontró el canvas con id 'game'.");
     throw new Error("No se encontró el canvas con id 'game'.");
   }
+  
   ctx = canvas.getContext('2d');
-  camera = {
+  camara = {
     x: 0,
     y: Math.max(0, CONFIG.WORLD_HEIGHT - canvas.height)
   };
 
   // Manejo de entrada
-  keys = {};
-  window.addEventListener('keydown', e => { keys[e.key] = true; });
-  window.addEventListener('keyup', e => { keys[e.key] = false; });
+  teclas = {};
+  window.addEventListener('keydown', e => { teclas[e.key] = true; });
+  window.addEventListener('keyup', e => { teclas[e.key] = false; });
 
-  // Variables de juego
-  otherPlayers = {};
-  // Jugador local, usando las constantes de CONFIG
-  player = {
+  // Variables de jugadores
+  otrosJugadores = {};
+  
+  // Jugador local
+  jugador = {
     x: canvas.width / 2 - CONFIG.PLAYER_WIDTH / 2,
     y: CONFIG.WORLD_HEIGHT - CONFIG.PLAYER_HEIGHT - 60,
     w: CONFIG.PLAYER_WIDTH,
     h: CONFIG.PLAYER_HEIGHT,
-    vx: 0, vy: 0,
-    speed: CONFIG.PLAYER_SPEED,
+    vx: 0, 
+    vy: 0,
+    velocidad: CONFIG.PLAYER_SPEED,
     color: CONFIG.PLAYER_COLOR,
-    onGround: false,
-    prevX: canvas.width / 2 - CONFIG.PLAYER_WIDTH / 2,
-    prevY: CONFIG.WORLD_HEIGHT - CONFIG.PLAYER_HEIGHT - 60
+    enSuelo: false,
+    vidas: 5,
+    invulnerableHasta: 0,
+
   };
-  // Player UI state: lives and temporary invulnerability after respawn
-  player.lives = 5;
-  player.invulnerableUntil = 0;
-  player.flashUntil = 0;
 
-  // Lógica de carga de assets
-  let playerSprite = new Image();
-  let backgroundImage = null;
-  let backgroundPattern = null;
-  let backgroundCanvas = null;
-  let backgroundCtx = null;
-  let assetsLoaded = false;
-  let slimeImage = null;
-  let slimeLoaded = false;
-  let starImage = null;
-  let starLoaded = false;
-  // Web Audio state
-  let audioCtx = null;
-  let jumpBuffer = null;
-  let jumpGain = null;
-  let jumpLoaded = false;
-  let starBuffer = null;
-  let starGain = null;
-  let starLoadedSound = false;
-  let damageBuffer = null;
-  let damageGain = null;
-  let damageLoadedSound = false;
-  // Game state
-  let gameOver = false;
+  // --- Funciones auxiliares de color y carga ---
 
-
-  function hexToRgb(hex) {
+  function hexARgb(hex) {
     if (!hex) return { r: 0, g: 0, b: 0 };
-    let value = hex.replace('#', '').trim();
-    if (value.length === 3) {
-      value = value.split('').map((char) => char + char).join('');
+    let valor = hex.replace('#', '').trim();
+    if (valor.length === 3) {
+      valor = valor.split('').map((char) => char + char).join('');
     }
-    const int = parseInt(value, 16);
-    if (Number.isNaN(int)) return { r: 0, g: 0, b: 0 };
+    const entero = parseInt(valor, 16);
+    if (Number.isNaN(entero)) return { r: 0, g: 0, b: 0 };
     return {
-      r: (int >> 16) & 255,
-      g: (int >> 8) & 255,
-      b: int & 255
+      r: (entero >> 16) & 255,
+      g: (entero >> 8) & 255,
+      b: entero & 255
     };
   }
 
-  function rgbToCss({ r, g, b }) {
+  function rgbACss({ r, g, b }) {
     return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
   }
 
-  function lerp(a, b, t) {
+  function interpolacion(a, b, t) {
     return a + (b - a) * Math.min(Math.max(t, 0), 1);
   }
 
-  function lerpColor(colorA, colorB, t) {
+  function interpolarColor(colorA, colorB, t) {
     return {
-      r: lerp(colorA.r, colorB.r, t),
-      g: lerp(colorA.g, colorB.g, t),
-      b: lerp(colorA.b, colorB.b, t)
+      r: interpolacion(colorA.r, colorB.r, t),
+      g: interpolacion(colorA.g, colorB.g, t),
+      b: interpolacion(colorA.b, colorB.b, t)
     };
   }
 
-  function getColorFromStops(stops = [], t) {
-    if (!stops.length) return 'rgba(0, 0, 0, 0)';
-    const clamped = Math.min(Math.max(t, 0), 1);
-    let previous = stops[0];
-    for (const stop of stops) {
-      if (clamped <= stop.stop) {
-        const span = stop.stop - previous.stop || 1;
-        const localT = (clamped - previous.stop) / span;
-        const color = lerpColor(hexToRgb(previous.color), hexToRgb(stop.color), localT);
-        return rgbToCss(color);
+  function obtenerColorDeParadas(paradas = [], t) {
+    if (!paradas.length) return 'rgba(0, 0, 0, 0)';
+    const limitado = Math.min(Math.max(t, 0), 1);
+    let previa = paradas[0];
+    for (const parada of paradas) {
+      if (limitado <= parada.stop) {
+        const tramo = parada.stop - previa.stop || 1;
+        const tLocal = (limitado - previa.stop) / tramo;
+        const color = interpolarColor(hexARgb(previa.color), hexARgb(parada.color), tLocal);
+        return rgbACss(color);
       }
-      previous = stop;
+      previa = parada;
     }
-    const lastColor = hexToRgb(stops[stops.length - 1].color);
-    return rgbToCss(lastColor);
+    const ultimoColor = hexARgb(paradas[paradas.length - 1].color);
+    return rgbACss(ultimoColor);
   }
 
-  function loadImage(src) {
-    return new Promise((resolve) => {
+  function cargarImagen(ruta) {
+    return new Promise((resolver) => {
       const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null);
-      img.src = src;
+      img.onload = () => resolver(img);
+      img.onerror = () => resolver(null);
+      img.src = ruta;
     });
   }
 
-  async function createAudioContextIfNeeded() {
+  async function crearContextoAudioSiEsNecesario() {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
     try { await audioCtx.resume(); } catch (e) { }
   }
 
-  async function loadAudioBuffer(url) {
+  async function cargarBufferAudio(url) {
     if (!url) return null;
     try {
-      await createAudioContextIfNeeded();
+      await crearContextoAudioSiEsNecesario();
       const res = await fetch(url);
       if (!res.ok) return null;
       const ab = await res.arrayBuffer();
       const buf = await audioCtx.decodeAudioData(ab);
       return buf;
     } catch (e) {
-      console.warn('Failed to load audio buffer', e);
+      console.warn('Fallo al cargar buffer de audio', e);
       return null;
     }
   }
 
-  async function loadAssets() {
-    // Load background always, player sprite only when ASSETS.PLAYER is set
-    const bgPromise = loadImage(ASSETS.BACKGROUND);
-    const playerPromise = ASSETS.PLAYER ? loadImage(ASSETS.PLAYER) : Promise.resolve(null);
-    const jumpPromise = ASSETS.JUMP ? loadAudioBuffer(ASSETS.JUMP) : Promise.resolve(null);
-    const slimePromise = ASSETS.SLIME ? loadImage(ASSETS.SLIME) : Promise.resolve(null);
-    const starPromise = ASSETS.STAR ? loadImage(ASSETS.STAR) : Promise.resolve(null);
+  async function cargarRecursos() {
+    const promesaFondo = cargarImagen(ASSETS.BACKGROUND);
+    const promesaJugador = ASSETS.PLAYER ? cargarImagen(ASSETS.PLAYER) : Promise.resolve(null);
+    const promesaSalto = ASSETS.JUMP ? cargarBufferAudio(ASSETS.JUMP) : Promise.resolve(null);
+    const promesaEnemigo = ASSETS.SLIME ? cargarImagen(ASSETS.SLIME) : Promise.resolve(null);
+    const promesaEstrella = ASSETS.STAR ? cargarImagen(ASSETS.STAR) : Promise.resolve(null);
 
-    const [playerImg, bgImg, jumpBuf, slimeImg, starImg] = await Promise.all([playerPromise, bgPromise, jumpPromise, slimePromise, starPromise]);
+    const [imgJugador, imgFondo, bufSalto, imgEnemigo, imgEstrella] = await Promise.all([
+      promesaJugador, promesaFondo, promesaSalto, promesaEnemigo, promesaEstrella
+    ]);
 
-    if (playerImg) {
-      playerSprite = playerImg;
-      assetsLoaded = true;
-    } else {
-      // keep assetsLoaded as-is (false if no sprite chosen)
-      assetsLoaded = assetsLoaded && !!playerSprite;
+    if (imgJugador) {
+      jugadorSprite = imgJugador;
+      recursosCargados = true;
     }
 
-    if (bgImg) {
-      const scale = BACKGROUND_SETTINGS?.SCALE || 1;
-      const scaledWidth = Math.max(1, Math.floor(bgImg.width * scale));
-      const scaledHeight = Math.max(1, Math.floor(bgImg.height * scale));
+    if (imgFondo) {
+      const escala = BACKGROUND_SETTINGS?.SCALE || 1;
+      const anchoEscalado = Math.max(1, Math.floor(imgFondo.width * escala));
+      const altoEscalado = Math.max(1, Math.floor(imgFondo.height * escala));
 
-      backgroundCanvas = document.createElement('canvas');
-      backgroundCanvas.width = scaledWidth;
-      backgroundCanvas.height = scaledHeight;
-      backgroundCtx = backgroundCanvas.getContext('2d');
-      backgroundCtx.drawImage(bgImg, 0, 0, scaledWidth, scaledHeight);
+      canvasFondo = document.createElement('canvas');
+      canvasFondo.width = anchoEscalado;
+      canvasFondo.height = altoEscalado;
+      ctxFondo = canvasFondo.getContext('2d');
+      ctxFondo.drawImage(imgFondo, 0, 0, anchoEscalado, altoEscalado);
 
-      backgroundImage = bgImg;
-      backgroundPattern = ctx.createPattern(backgroundCanvas, 'repeat');
-    } else {
-      backgroundImage = null;
-      backgroundPattern = null;
-      backgroundCanvas = null;
-      backgroundCtx = null;
+      imagenFondo = imgFondo;
+      patronFondo = ctx.createPattern(canvasFondo, 'repeat');
     }
 
-    // Handle jump buffer if present
-    if (typeof jumpBuf !== 'undefined') {
-      if (jumpBuf) {
-        jumpBuffer = jumpBuf;
-        jumpLoaded = true;
-        try {
-          if (!jumpGain && audioCtx) {
-            jumpGain = audioCtx.createGain();
-            jumpGain.gain.value = 0.8;
-            jumpGain.connect(audioCtx.destination);
-          }
-        } catch (e) { /* ignore */ }
-      } else {
-        jumpBuffer = null;
-        jumpLoaded = false;
+    if (bufSalto) {
+      bufferSalto = bufSalto;
+      saltoCargado = true;
+      if (!gananciaSalto && audioCtx) {
+        gananciaSalto = audioCtx.createGain();
+        gananciaSalto.gain.value = 0.8;
+        gananciaSalto.connect(audioCtx.destination);
       }
     }
 
-    // handle slime image
-    if (typeof slimeImg !== 'undefined') {
-      if (slimeImg) {
-        slimeImage = slimeImg;
-        slimeLoaded = true;
-      } else {
-        slimeImage = null;
-        slimeLoaded = false;
-      }
+    if (imgEnemigo) {
+      imagenEnemigo = imgEnemigo;
+      enemigoCargado = true;
     }
 
-    // handle star image
-    if (typeof starImg !== 'undefined') {
-      if (starImg) {
-        starImage = starImg;
-        starLoaded = true;
-      } else {
-        starImage = null;
-        starLoaded = false;
-      }
+    if (imgEstrella) {
+      imagenEstrella = imgEstrella;
+      estrellaCargada = true;
     }
-    // load star sound buffer if present
+
     if (ASSETS.STAR_SOUND) {
-      try {
-        const buf = await loadAudioBuffer(ASSETS.STAR_SOUND);
-        if (buf) {
-          starBuffer = buf;
-          starLoadedSound = true;
-          if (!starGain && audioCtx) {
-            starGain = audioCtx.createGain();
-            starGain.gain.value = 0.9;
-            starGain.connect(audioCtx.destination);
-          }
+      const buf = await cargarBufferAudio(ASSETS.STAR_SOUND);
+      if (buf) {
+        bufferEstrella = buf;
+        sonidoEstrellaCargado = true;
+        if (!gananciaEstrella && audioCtx) {
+          gananciaEstrella = audioCtx.createGain();
+          gananciaEstrella.gain.value = 0.9;
+          gananciaEstrella.connect(audioCtx.destination);
         }
-      } catch (e) {
-        console.warn('Failed to load star sound', e);
-        starBuffer = null;
-        starLoadedSound = false;
       }
     }
-    // load damage sound buffer if present
+
     if (ASSETS.DAMAGE) {
-      try {
-        const buf = await loadAudioBuffer(ASSETS.DAMAGE);
-        if (buf) {
-          damageBuffer = buf;
-          damageLoadedSound = true;
-          if (!damageGain && audioCtx) {
-            damageGain = audioCtx.createGain();
-            damageGain.gain.value = 0.9;
-            damageGain.connect(audioCtx.destination);
-          }
+      const buf = await cargarBufferAudio(ASSETS.DAMAGE);
+      if (buf) {
+        bufferDaño = buf;
+        sonidoDañoCargado = true;
+        if (!gananciaDaño && audioCtx) {
+          gananciaDaño = audioCtx.createGain();
+          gananciaDaño.gain.value = 0.9;
+          gananciaDaño.connect(audioCtx.destination);
         }
-      } catch (e) {
-        console.warn('Failed to load damage sound', e);
-        damageBuffer = null;
-        damageLoadedSound = false;
       }
     }
   }
 
-  function playJump() {
+  function reproducirSalto() {
     try {
-      if (jumpBuffer && audioCtx && jumpGain) {
-        const src = audioCtx.createBufferSource();
-        src.buffer = jumpBuffer;
-        src.connect(jumpGain);
-        src.start(0);
-        return;
+      if (bufferSalto && audioCtx && gananciaSalto) {
+        const fuente = audioCtx.createBufferSource();
+        fuente.buffer = bufferSalto;
+        fuente.connect(gananciaSalto);
+        fuente.start(0);
       }
-      // fallback: try HTMLAudio if present
-      if (typeof Audio !== 'undefined' && ASSETS.JUMP) {
-        const a = new Audio(ASSETS.JUMP);
-        a.volume = 0.8;
-        a.play().catch(() => { });
-      }
-    } catch (e) {
-      console.warn('playJump error', e);
-    }
+    } catch (e) { }
   }
 
   // --- Funciones del Juego ---
-  function resolveCollisions(p) {
-    p.onGround = false;
-    p.supportingPlat = null;
-    // previous bounds
-    const prev = { x: p.prevX, y: p.prevY, w: p.w, h: p.h };
+
+  function resolverColisiones(p) {
+    p.enSuelo = false;
+    const previo = { x: p.prevX, y: p.prevY, w: p.w, h: p.h };
 
     for (const plat of PLATFORMS) {
-      const collided = p.x < plat.x + plat.w && p.x + p.w > plat.x && p.y < plat.y + plat.h && p.y + p.h > plat.y;
-      if (!collided) continue;
+      const colisionado = p.x < plat.x + plat.w && p.x + p.w > plat.x && p.y < plat.y + plat.h && p.y + p.h > plat.y;
+      if (!colisionado) continue;
 
-      const prevBottom = prev.y + prev.h;
-      const prevTop = prev.y;
-      const prevRight = prev.x + prev.w;
-      const prevLeft = prev.x;
+      const basePrevia = previo.y + previo.h;
+      const topePrevio = previo.y;
+      const derechaPrevia = previo.x + previo.w;
+      const izquierdaPrevia = previo.x;
 
-      const platTop = plat.y;
-      const platBottom = plat.y + plat.h;
+      const topePlat = plat.y;
+      const basePlat = plat.y + plat.h;
 
-      // Land on platform: previous bottom was above platform top
-      if (prevBottom <= platTop) {
-        p.y = platTop - p.h;
+      if (basePrevia <= topePlat) {
+        p.y = topePlat - p.h;
         p.vy = 0;
-        p.onGround = true;
-        p.supportingPlat = plat;
+        p.enSuelo = true;
         continue;
       }
 
-      // Hit head on platform: previous top was below platform bottom
-      if (prevTop >= platBottom) {
-        p.y = platBottom;
+      if (topePrevio >= basePlat) {
+        p.y = basePlat;
         p.vy = 0;
         continue;
       }
 
-      // Horizontal collision: determine side based on previous horizontal position
-      if (prevRight <= plat.x) {
-        // collided into platform from left
+      if (derechaPrevia <= plat.x) {
         p.x = plat.x - p.w - 0.1;
         p.vx = 0;
         continue;
       }
-      if (prevLeft >= plat.x + plat.w) {
-        // collided into platform from right
+      if (izquierdaPrevia >= plat.x + plat.w) {
         p.x = plat.x + plat.w + 0.1;
         p.vx = 0;
         continue;
       }
 
-      // Fallback: push the player up if still overlapping
       if (p.vy >= 0) {
-        p.y = platTop - p.h;
+        p.y = topePlat - p.h;
         p.vy = 0;
-        p.onGround = true;
+        p.enSuelo = true;
       } else {
-        p.y = platBottom;
+        p.y = basePlat;
         p.vy = 0;
       }
     }
+  }
 
-    // If standing on a moving platform, carry the player horizontally
-    if (p.onGround && p.supportingPlat && p.supportingPlat.moving) {
-      p.x += p.supportingPlat.vx;
-      // clamp to world bounds
-      if (p.x < 0) p.x = 0;
-      if (p.x + p.w > CONFIG.WORLD_WIDTH) p.x = CONFIG.WORLD_WIDTH - p.w;
+  function manejarEntrada() {
+    jugador.vx = 0;
+    if (teclas['a'] || teclas['ArrowLeft']) jugador.vx = -jugador.velocidad;
+    else if (teclas['d'] || teclas['ArrowRight']) jugador.vx = jugador.velocidad;
+
+    if ((teclas['w'] || teclas['ArrowUp'] || teclas[' ']) && jugador.enSuelo) {
+      jugador.vy = CONFIG.JUMP_POWER;
+      jugador.enSuelo = false;
+      reproducirSalto();
     }
   }
 
-  function handleInput() {
-    player.vx = 0;
-    if (keys['a'] || keys['ArrowLeft']) player.vx = -player.speed;
-    else if (keys['d'] || keys['ArrowRight']) player.vx = player.speed;
+  function actualizarFisicas() {
+    jugador.prevX = jugador.x;
+    jugador.prevY = jugador.y;
+    jugador.vy += CONFIG.GRAVITY;
+    jugador.x += jugador.vx;
+    jugador.y += jugador.vy;
 
-    // Usa 'w', 'ArrowUp' o 'espacio' para saltar
-    if ((keys['w'] || keys['ArrowUp'] || keys[' ']) && player.onGround) {
-      player.vy = CONFIG.JUMP_POWER;
-      player.onGround = false;
-      try { playJump(); } catch (e) { }
-    }
-  }
-
-  function updatePhysics() {
-    // Aplicar física
-    // store previous position for robust collision resolution
-    player.prevX = player.x;
-    player.prevY = player.y;
-    player.vy += CONFIG.GRAVITY; // Usa constante
-    player.x += player.vx;
-    player.y += player.vy;
-
-    // Límites del mundo
-    if (player.x < 0) player.x = 0;
-    if (player.x + player.w > CONFIG.WORLD_WIDTH) player.x = CONFIG.WORLD_WIDTH - player.w;
-    if (player.y < 0) { player.y = 0; player.vy = 0; }
-    if (player.y + player.h > CONFIG.WORLD_HEIGHT) {
-      player.y = CONFIG.WORLD_HEIGHT - CONFIG.PLAYER_HEIGHT - 60;
-      player.vy = 0;
-      player.onGround = true;
+    if (jugador.x < 0) jugador.x = 0;
+    if (jugador.x + jugador.w > CONFIG.WORLD_WIDTH) jugador.x = CONFIG.WORLD_WIDTH - jugador.w;
+    if (jugador.y < 0) { jugador.y = 0; jugador.vy = 0; }
+    
+    if (jugador.y + jugador.h > CONFIG.WORLD_HEIGHT) {
+      jugador.y = CONFIG.WORLD_HEIGHT - CONFIG.PLAYER_HEIGHT - 60;
+      jugador.vy = 0;
+      jugador.enSuelo = true;
     }
 
-    resolveCollisions(player);
-    updateCamera();
+    resolverColisiones(jugador);
+    actualizarCamara();
 
-    // Detect falling below the world (very low) as death/fall
-    const FALL_DEATH_Y = CONFIG.WORLD_HEIGHT + 100;
-    if (player.y > FALL_DEATH_Y) {
-      tryLoseLife(0.5);
-      respawnPlayer();
+    const LIMITE_MUERTE_CAIDA = CONFIG.WORLD_HEIGHT + 100;
+    if (jugador.y > LIMITE_MUERTE_CAIDA) {
+      intentarPerderVida(0.5);
+      reaparecerJugador();
     }
 
-    // Enviar posición al servidor
     socket.emit('playerMovement', {
-      x: Math.round(player.x),
-      y: Math.round(player.y),
-      vx: player.vx,
-      vy: player.vy
+      x: Math.round(jugador.x),
+      y: Math.round(jugador.y),
+      vx: jugador.vx,
+      vy: jugador.vy
     });
   }
 
-  function updateCamera() {
-    const targetX = player.x + player.w / 2 - canvas.width / 2;
-    const maxOffsetX = Math.max(0, CONFIG.WORLD_WIDTH - canvas.width);
-    camera.x = Math.min(Math.max(targetX, 0), maxOffsetX);
+  function actualizarCamara() {
+    const objetivoX = jugador.x + jugador.w / 2 - canvas.width / 2;
+    const maxOffsetH = Math.max(0, CONFIG.WORLD_WIDTH - canvas.width);
+    camara.x = Math.min(Math.max(objetivoX, 0), maxOffsetH);
 
-    const targetY = player.y + player.h / 2 - canvas.height / 2;
-    const maxOffsetY = Math.max(0, CONFIG.WORLD_HEIGHT - canvas.height);
-    camera.y = Math.min(Math.max(targetY, 0), maxOffsetY);
+    const objetivoY = jugador.y + jugador.h / 2 - canvas.height / 2;
+    const maxOffsetV = Math.max(0, CONFIG.WORLD_HEIGHT - canvas.height);
+    camara.y = Math.min(Math.max(objetivoY, 0), maxOffsetV);
   }
 
-  function tryLoseLife(amount = 1) {
-    const now = Date.now();
-    if (player.invulnerableUntil > now) return; // ignore while invulnerable
-    // allow fractional lives (halves)
-    player.lives = Math.max(0, Math.round((player.lives - amount) * 2) / 2);
-    player.invulnerableUntil = now + 1500; // 1.5s invulnerability after losing life
-    player.flashUntil = now + 1200;
-    // Optional: play a sound or show effect here
+  function intentarPerderVida(cantidad = 1) {
+    const ahora = Date.now();
+    if (jugador.invulnerableHasta > ahora) return;
+    jugador.vidas = Math.max(0, Math.round((jugador.vidas - cantidad) * 2) / 2);
+    jugador.invulnerableHasta = ahora + 1500;
+    jugador.parpadeoHasta = ahora + 1200;
+
     try {
-      if (damageBuffer && audioCtx && damageGain) {
-        const src = audioCtx.createBufferSource();
-        src.buffer = damageBuffer;
-        src.connect(damageGain);
-        src.start(0);
-      } else if (typeof Audio !== 'undefined' && ASSETS.DAMAGE) {
-        const a = new Audio(ASSETS.DAMAGE);
-        a.volume = 0.9;
-        a.play().catch(() => { });
+      if (bufferDaño && audioCtx && gananciaDaño) {
+        const fuente = audioCtx.createBufferSource();
+        fuente.buffer = bufferDaño;
+        fuente.connect(gananciaDaño);
+        fuente.start(0);
       }
-    } catch (e) {
-      console.warn('play damage sound error', e);
-    }
-    if (player.lives <= 0) {
-      // Game over: pause updates and show overlay
-      gameOver = true;
+    } catch (e) { }
+
+    if (jugador.vidas <= 0) {
+      juegoTerminado = true;
       const overlay = document.getElementById('gameOverOverlay');
       if (overlay) overlay.style.display = 'flex';
     }
   }
 
-  function respawnPlayer() {
-    // Simple respawn at starting location near bottom
-    player.x = canvas.width / 2 - player.w / 2;
-    player.y = CONFIG.WORLD_HEIGHT - player.h - 60;
-    player.vx = 0;
-    player.vy = 0;
+  function reaparecerJugador() {
+    jugador.x = canvas.width / 2 - jugador.w / 2;
+    jugador.y = CONFIG.WORLD_HEIGHT - jugador.h - 60;
+    jugador.vx = 0;
+    jugador.vy = 0;
   }
 
-  function drawBackground() {
-    const maxOffsetY = Math.max(0, CONFIG.WORLD_HEIGHT - canvas.height);
-    const progress = maxOffsetY === 0 ? 0 : camera.y / maxOffsetY;
-    const easedProgress = Math.pow(progress, 1.5);
-    const overlayColor = getColorFromStops(BACKGROUND_SETTINGS?.COLOR_STOPS, progress);
-    const overlayAlpha = BACKGROUND_SETTINGS?.OVERLAY_ALPHA ?? 0.35;
+  function dibujarFondo() {
+    const maxOffsetV = Math.max(0, CONFIG.WORLD_HEIGHT - canvas.height);
+    const progreso = maxOffsetV === 0 ? 0 : camara.y / maxOffsetV;
+    const colorCapa = obtenerColorDeParadas(BACKGROUND_SETTINGS?.COLOR_STOPS, progreso);
+    const alfaCapa = BACKGROUND_SETTINGS?.OVERLAY_ALPHA ?? 0.35;
 
-    if (backgroundPattern && backgroundCanvas) {
+    if (patronFondo && canvasFondo) {
       ctx.save();
-      const tileWidth = backgroundCanvas.width;
-      const tileHeight = backgroundCanvas.height;
-      const offsetX = -(camera.x % tileWidth);
-      const offsetY = -(camera.y % tileHeight);
+      const anchoAzulejo = canvasFondo.width;
+      const altoAzulejo = canvasFondo.height;
+      const offsetX = -(camara.x % anchoAzulejo);
+      const offsetY = -(camara.y % altoAzulejo);
       ctx.translate(offsetX, offsetY);
-      ctx.fillStyle = backgroundPattern;
-      ctx.fillRect(
-        -tileWidth,
-        -tileHeight,
-        canvas.width + tileWidth * 2,
-        canvas.height + tileHeight * 2
-      );
+      ctx.fillStyle = patronFondo;
+      ctx.fillRect(-anchoAzulejo, -altoAzulejo, canvas.width + anchoAzulejo * 2, canvas.height + altoAzulejo * 2);
       ctx.restore();
 
-      if (overlayAlpha > 0) {
+      if (alfaCapa > 0) {
         ctx.save();
-        ctx.globalAlpha = overlayAlpha;
-        ctx.fillStyle = overlayColor;
+        ctx.globalAlpha = alfaCapa;
+        ctx.fillStyle = colorCapa;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
       }
       return;
     }
 
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    const topColor = getColorFromStops(BACKGROUND_SETTINGS?.COLOR_STOPS, Math.max(easedProgress - 0.15, 0));
-    const bottomColor = getColorFromStops(BACKGROUND_SETTINGS?.COLOR_STOPS, Math.min(easedProgress + 0.15, 1));
-    gradient.addColorStop(0, topColor || CONFIG.BACKGROUND.SKY_TOP);
-    gradient.addColorStop(1, bottomColor || CONFIG.BACKGROUND.SKY_BOTTOM);
-    ctx.fillStyle = gradient;
+    const gradiente = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradiente.addColorStop(0, CONFIG.BACKGROUND.SKY_TOP);
+    gradiente.addColorStop(1, CONFIG.BACKGROUND.SKY_BOTTOM);
+    ctx.fillStyle = gradiente;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  function draw() {
+  function dibujar() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBackground();
+    dibujarFondo();
 
     ctx.save();
-    ctx.translate(-camera.x, -camera.y);
+    ctx.translate(-camara.x, -camara.y);
 
-    // Dibujar plataformas
     ctx.fillStyle = CONFIG.PLATFORM_COLOR;
     for (const plat of PLATFORMS) {
       ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
     }
 
-    // Dibujar slimes (enemigos)
-    drawSlimes();
+    dibujarEnemigos();
+    dibujarEstrellas();
 
-    // Dibujar estrellas coleccionables
-    drawStars();
-
-    // Dibujar otros jugadores
-    for (const id in otherPlayers) {
-      const p = otherPlayers[id];
+    for (const id in otrosJugadores) {
+      const p = otrosJugadores[id];
       ctx.fillStyle = p.color || CONFIG.OTHER_PLAYER_COLOR;
-
-      if (assetsLoaded) {
-        ctx.drawImage(playerSprite, p.x, p.y, player.w, player.h);
+      if (recursosCargados) {
+        ctx.drawImage(jugadorSprite, p.x, p.y, jugador.w, jugador.h);
       } else {
-        ctx.fillRect(p.x, p.y, player.w, player.h);
+        ctx.fillRect(p.x, p.y, jugador.w, jugador.h);
       }
-
-      ctx.fillStyle = '#000';
-      ctx.font = '10px monospace';
-      ctx.fillText(p.name || id.slice(0, 4), p.x, p.y - 6);
     }
 
-    if (assetsLoaded) {
-      ctx.drawImage(playerSprite, player.x, player.y, player.w, player.h);
+    if (recursosCargados) {
+      ctx.drawImage(jugadorSprite, jugador.x, jugador.y, jugador.w, jugador.h);
     } else {
-      ctx.fillStyle = player.color;
-      ctx.fillRect(player.x, player.y, player.w, player.h);
+      ctx.fillStyle = jugador.color;
+      ctx.fillRect(jugador.x, jugador.y, jugador.w, jugador.h);
     }
-
-    ctx.fillStyle = '#000';
-    ctx.font = '12px monospace';
-    ctx.fillText('You', player.x, player.y - 8);
 
     ctx.restore();
-
-    // Draw HUD: lives as hearts
-    drawLivesHUD();
-    // Draw HUD: stars collected
-    drawStarsHUD();
+    dibujarHUDVidas();
+    dibujarHUDEstrellas();
   }
 
-  function drawLivesHUD() {
-    const heartSize = 18;
-    const padding = 8;
-    const total = 5; // display up to 5 hearts for UI (but player.lives may be <=3)
+  function dibujarHUDVidas() {
+    const tamanoCorazon = 18;
+    const margen = 8;
     ctx.save();
-    ctx.resetTransform && ctx.resetTransform();
-    ctx.font = `${heartSize}px sans-serif`;
-    for (let i = 0; i < total; i++) {
-      const x = padding + i * (heartSize + 6);
-      const y = padding + heartSize;
-      // draw empty heart as background
+    ctx.font = `${tamanoCorazon}px sans-serif`;
+    for (let i = 0; i < 5; i++) {
+      const x = margen + i * (tamanoCorazon + 6);
+      const y = margen + tamanoCorazon;
       ctx.fillStyle = '#555';
       ctx.fillText('♡', x, y);
-
-      const value = Math.max(0, player.lives - i); // how much this heart is filled (0..1+)
-      if (value >= 1) {
-        // full heart
+      const valor = Math.max(0, jugador.vidas - i);
+      if (valor >= 1) {
         ctx.fillStyle = '#e63946';
         ctx.fillText('❤', x, y);
-      } else if (value >= 0.5) {
-        // half heart: draw filled heart but clipped to half width
-        const metrics = ctx.measureText('❤');
-        const w = metrics.width || heartSize;
+      } else if (valor >= 0.5) {
         ctx.save();
         ctx.beginPath();
-        ctx.rect(x, y - heartSize, Math.floor(w / 2), heartSize + 4);
+        ctx.rect(x, y - tamanoCorazon, Math.floor(tamanoCorazon / 2), tamanoCorazon + 4);
         ctx.clip();
         ctx.fillStyle = '#e63946';
         ctx.fillText('❤', x, y);
@@ -593,54 +484,38 @@ function StartGameManager(codigo, initialPlayers, myEmail) {
     ctx.restore();
   }
 
-  function drawStarsHUD() {
-    // top-right or top-center display of 10 slots
+  function dibujarHUDEstrellas() {
     const total = Array.isArray(STARS) ? STARS.length : 10;
-    const size = 22;
-    const padding = 10;
-    const startX = Math.round((canvas.width - (total * (size + 6) - 6)) / 2);
-    const y = padding + size;
+    const tamano = 22;
+    const margen = 10;
+    const inicioX = Math.round((canvas.width - (total * (tamano + 6) - 6)) / 2);
+    const y = margen + tamano;
     ctx.save();
-    ctx.resetTransform && ctx.resetTransform();
     for (let i = 0; i < total; i++) {
-      const x = startX + i * (size + 6);
-      // slot background
+      const x = inicioX + i * (tamano + 6);
       ctx.fillStyle = '#333';
-      ctx.fillRect(x - 2, y - size, size + 4, size + 4);
-      // if collected, draw filled star
+      ctx.fillRect(x - 2, y - tamano, tamano + 4, tamano + 4);
       const s = STARS[i];
       if (s && s.collected) {
-        if (starLoaded && starImage) {
-          ctx.drawImage(starImage, x, y - size + 2, size, size);
+        if (estrellaCargada && imagenEstrella) {
+          ctx.drawImage(imagenEstrella, x, y - tamano + 2, tamano, tamano);
         } else {
           ctx.fillStyle = '#ffd166';
-          ctx.beginPath();
-          const cx = x + size / 2;
-          const cy = y - size / 2;
-          const r = size / 2;
-          ctx.moveTo(cx + r, cy);
-          for (let k = 1; k <= 5; k++) {
-            const a = (k * 2 * Math.PI) / 5;
-            ctx.lineTo(cx + Math.cos(a) * r * 0.5, cy + Math.sin(a) * r * 0.5);
-            const b = ((k + 0.5) * 2 * Math.PI) / 5;
-            ctx.lineTo(cx + Math.cos(b) * r, cy + Math.sin(b) * r);
-          }
-          ctx.fill();
+          ctx.fillText('★', x, y);
         }
       } else {
-        // empty slot outline
         ctx.strokeStyle = '#777';
-        ctx.strokeRect(x, y - size + 2, size, size);
+        ctx.strokeRect(x, y - tamano + 2, tamano, tamano);
       }
     }
     ctx.restore();
   }
 
-  function drawSlimes() {
+  function dibujarEnemigos() {
     if (!Array.isArray(SLIMES)) return;
     for (const s of SLIMES) {
-      if (slimeLoaded && slimeImage) {
-        ctx.drawImage(slimeImage, s.x, s.y, s.w, s.h);
+      if (enemigoCargado && imagenEnemigo) {
+        ctx.drawImage(imagenEnemigo, s.x, s.y, s.w, s.h);
       } else {
         ctx.fillStyle = '#29a745';
         ctx.fillRect(s.x, s.y, s.w, s.h);
@@ -648,298 +523,221 @@ function StartGameManager(codigo, initialPlayers, myEmail) {
     }
   }
 
-  // --- Bucle principal del juego ---
-  function loop() {
-    if (!gameOver) {
-      // Update moving platforms before physics so collisions use updated positions
-      updatePlatforms();
-      // Update slimes' patrol positions
-      updateSlimes();
-      // Update stars (placeholder)
-      updateStars();
-      handleInput();
-      updatePhysics();
-      // After physics, check collisions with slimes
-      checkPlayerSlimeCollisions();
-      // Check star pickups after physics
-      checkPlayerStarCollisions();
+  function bucle() {
+    if (!juegoTerminado) {
+      actualizarPlataformas();
+      actualizarEnemigos();
+      manejarEntrada();
+      actualizarFisicas();
+      comprobarColisionesEnemigos();
+      comprobarColisionesEstrellas();
     }
-    draw();
-    requestAnimationFrame(loop);
+    dibujar();
+    requestAnimationFrame(bucle);
   }
 
-  function updatePlatforms() {
+  function actualizarPlataformas() {
     for (const plat of PLATFORMS) {
       if (!plat.moving) continue;
       const mult = (typeof CONFIG.PLATFORM_SPEED_MULTIPLIER === 'number') ? CONFIG.PLATFORM_SPEED_MULTIPLIER : 1;
       plat.x += plat.vx * mult;
-      if (plat.x < plat.minX) {
-        plat.x = plat.minX;
-        plat.vx = -plat.vx;
-      } else if (plat.x > plat.maxX) {
-        plat.x = plat.maxX;
-        plat.vx = -plat.vx;
-      }
+      if (plat.x < plat.minX || plat.x > plat.maxX) plat.vx = -plat.vx;
     }
   }
 
-  function updateSlimes() {
+  function actualizarEnemigos() {
     if (!Array.isArray(SLIMES)) return;
     const mult = (typeof CONFIG.SLIME_SPEED_MULTIPLIER === 'number') ? CONFIG.SLIME_SPEED_MULTIPLIER : 1;
     for (const s of SLIMES) {
       s.x += (s.vx || 0) * mult;
-      if (s.x < s.minX) {
-        s.x = s.minX;
-        s.vx = -(s.vx || 0);
-      } else if (s.x > s.maxX) {
-        s.x = s.maxX;
-        s.vx = -(s.vx || 0);
-      }
+      if (s.x < s.minX || s.x > s.maxX) s.vx = -(s.vx || 0);
     }
   }
 
-  function checkPlayerSlimeCollisions() {
+  function comprobarColisionesEnemigos() {
     if (!Array.isArray(SLIMES)) return;
     for (const s of SLIMES) {
-      const collided = player.x < s.x + s.w && player.x + player.w > s.x && player.y < s.y + s.h && player.y + player.h > s.y;
-      if (!collided) continue;
-      // If player is invulnerable, ignore
-      const now = Date.now();
-      if (player.invulnerableUntil > now) continue;
-      // Damage player and knock back slightly
-      tryLoseLife(1);
-      player.vy = CONFIG.JUMP_POWER / 1.2; // knock upwards a bit
-      // push horizontally away from slime
-      const push = (player.x + player.w / 2) < (s.x + s.w / 2) ? -6 : 6;
-      player.x += push;
+      const colisionado = jugador.x < s.x + s.w && jugador.x + jugador.w > s.x && jugador.y < s.y + s.h && jugador.y + jugador.h > s.y;
+      if (!colisionado) continue;
+      const ahora = Date.now();
+      if (jugador.invulnerableHasta > ahora) continue;
+      intentarPerderVida(1);
+      jugador.vy = CONFIG.JUMP_POWER / 1.2;
+      jugador.x += (jugador.x + jugador.w / 2) < (s.x + s.w / 2) ? -6 : 6;
     }
   }
 
-  // Stars: update and collision
-  function updateStars() {
-    // nothing to animate per-frame for now, but function kept for symmetry
-  }
-
-  function checkPlayerStarCollisions() {
+  function comprobarColisionesEstrellas() {
     if (!Array.isArray(STARS)) return;
-    let collectedNow = false;
     for (const s of STARS) {
       if (s.collected) continue;
-      const collided = player.x < s.x + s.w && player.x + player.w > s.x && player.y < s.y + s.h && player.y + player.h > s.y;
-      if (!collided) continue;
+      const colisionado = jugador.x < s.x + s.w && jugador.x + jugador.w > s.x && jugador.y < s.y + s.h && jugador.y + jugador.h > s.y;
+      if (!colisionado) continue;
       s.collected = true;
-      collectedNow = true;
-      // play star pickup sound
       try {
-        if (starBuffer && audioCtx && starGain) {
-          const src = audioCtx.createBufferSource();
-          src.buffer = starBuffer;
-          src.connect(starGain);
-          src.start(0);
-        } else if (typeof Audio !== 'undefined' && ASSETS.STAR_SOUND) {
-          const a = new Audio(ASSETS.STAR_SOUND);
-          a.volume = 0.9;
-          a.play().catch(() => { });
+        if (bufferEstrella && audioCtx && gananciaEstrella) {
+          const fuente = audioCtx.createBufferSource();
+          fuente.buffer = bufferEstrella;
+          fuente.connect(gananciaEstrella);
+          fuente.start(0);
         }
-      } catch (e) {
-        console.warn('play star sound error', e);
-      }
+      } catch (e) { }
     }
-    // Si todas las estrellas están recogidas, mostrar overlay de victoria
     if (STARS.every(s => s.collected)) {
-      gameOver = true;
+      juegoTerminado = true;
       const overlay = document.getElementById('victoryOverlay');
       if (overlay) overlay.style.display = 'flex';
     }
   }
 
-  function drawStars() {
+  function dibujarEstrellas() {
     if (!Array.isArray(STARS)) return;
     for (const s of STARS) {
       if (s.collected) continue;
-      if (starLoaded && starImage) {
-        ctx.drawImage(starImage, s.x, s.y, s.w, s.h);
+      if (estrellaCargada && imagenEstrella) {
+        ctx.drawImage(imagenEstrella, s.x, s.y, s.w, s.h);
       } else {
         ctx.fillStyle = '#ffd166';
-        ctx.beginPath();
-        const cx = s.x + s.w / 2;
-        const cy = s.y + s.h / 2;
-        const r = Math.min(s.w, s.h) / 2;
-        ctx.moveTo(cx + r, cy);
-        for (let i = 1; i <= 5; i++) {
-          const a = (i * 2 * Math.PI) / 5;
-          ctx.lineTo(cx + Math.cos(a) * r * 0.5, cy + Math.sin(a) * r * 0.5);
-          const b = ((i + 0.5) * 2 * Math.PI) / 5;
-          ctx.lineTo(cx + Math.cos(b) * r, cy + Math.sin(b) * r);
-        }
-        ctx.fill();
+        ctx.fillRect(s.x, s.y, s.w, s.h);
       }
     }
   }
 
+  // --- Eventos de Socket.io ---
 
-  // --- Manejo de Eventos de Socket.io (Se mantiene igual) ---
-
-  socket.on('connect', () => {
-    console.log('connected', socket.id);
-  });
-
-  socket.on('currentPlayers', (players) => {
-    for (const id in players) {
+  socket.on('currentPlayers', (usuarios) => {
+    for (const id in usuarios) {
       if (id === socket.id) {
-        player.x = players[id].x;
-        player.y = players[id].y;
-        player.color = players[id].color || player.color;
-        // keep local lives at 5 unless server provided a value
-        player.lives = players[id].lives || 5;
+        jugador.x = usuarios[id].x;
+        jugador.y = usuarios[id].y;
+        jugador.color = usuarios[id].color || jugador.color;
+        jugador.vidas = usuarios[id].lives || 5;
       } else {
-        otherPlayers[id] = players[id];
-        otherPlayers[id].lives = players[id].lives || 5;
+        otrosJugadores[id] = usuarios[id];
+        otrosJugadores[id].vidas = usuarios[id].lives || 5;
       }
     }
   });
 
   socket.on('newPlayer', (p) => {
-    otherPlayers[p.id] = p;
-    otherPlayers[p.id].lives = p.lives || 5;
+    otrosJugadores[p.id] = p;
+    otrosJugadores[p.id].vidas = p.lives || 5;
   });
 
   socket.on('playerMoved', (p) => {
     if (p.id !== socket.id) {
-      otherPlayers[p.id] = p;
-      // preserve lives if present, default to 5
-      otherPlayers[p.id].lives = p.lives || otherPlayers[p.id].lives || 5;
+      otrosJugadores[p.id] = p;
+      otrosJugadores[p.id].vidas = p.lives || otrosJugadores[p.id].lives || 5;
     }
   });
 
   socket.on('playerDisconnected', (id) => {
-    delete otherPlayers[id];
+    delete otrosJugadores[id];
   });
 
-  // 🚀 Iniciar la carga y luego el loop
-  async function start() {
-    await loadAssets();
-    loop();
+  async function iniciar() {
+    await cargarRecursos();
+    bucle();
   }
 
-  // Wait for user to select character in the menu before starting
-  function applySelectionAndStart(selection) {
-    if (!selection) selection = { type: 'color', color: CONFIG.PLAYER_COLOR };
+  function aplicarSeleccionYEmpezar(seleccion) {
+    if (!seleccion) seleccion = { type: 'color', color: CONFIG.PLAYER_COLOR };
+    const escala = CONFIG.PLAYER_SCALE || 1;
+    jugador.w = Math.round(CONFIG.PLAYER_WIDTH * escala);
+    jugador.h = Math.round(CONFIG.PLAYER_HEIGHT * escala);
 
-    // Apply size scale to the player before starting
-    const scale = CONFIG.PLAYER_SCALE || 1;
-    player.w = Math.round(CONFIG.PLAYER_WIDTH * scale);
-    player.h = Math.round(CONFIG.PLAYER_HEIGHT * scale);
-
-    if (selection.type === 'sprite') {
-      // set ASSETS.PLAYER so loadAssets will load the chosen sprite
-      ASSETS.PLAYER = selection.src;
-      // start game loop — loadAssets will pick up ASSETS.PLAYER
-      start();
-    } else if (selection.type === 'color') {
-      // use solid color sprite
-      ASSETS.PLAYER = null; // ensure no sprite is loaded
-      assetsLoaded = false;
-      player.color = selection.color || CONFIG.PLAYER_COLOR;
-      start();
+    if (seleccion.type === 'sprite') {
+      ASSETS.PLAYER = seleccion.src;
+      iniciar();
+    } else {
+      ASSETS.PLAYER = null;
+      recursosCargados = false;
+      jugador.color = seleccion.color || CONFIG.PLAYER_COLOR;
+      iniciar();
     }
   }
-  // Permite iniciar el juego programáticamente (sin los menús HTML originales)
-  window.startJumpverse = function (selection) {
-    applySelectionAndStart(selection);
-  };
-  // 
 
-  function initializeMenuUI() {
-    const playBtn = document.getElementById('playBtn');
-    if (!playBtn) {
-      // No existe la UI original: arrancar directamente con selección por defecto
-      applySelectionAndStart({ type: 'color', color: CONFIG.PLAYER_COLOR });
+  window.startJumpverse = function (seleccion) {
+    aplicarSeleccionYEmpezar(seleccion);
+  };
+
+  function inicializarInterfazMenu() {
+    const botonJugar = document.getElementById('playBtn');
+    if (!botonJugar) {
+      aplicarSeleccionYEmpezar({ type: 'color', color: CONFIG.PLAYER_COLOR });
     } else {
-      // Show 'How to play' overlay first
-      const howToPlay = document.getElementById('howToPlayOverlay');
-      const menuOverlay = document.getElementById('menuOverlay');
-      if (howToPlay && menuOverlay) {
-        howToPlay.style.display = 'flex';
-        menuOverlay.style.display = 'none';
-        const startBtn = document.getElementById('startGameBtn');
-        if (startBtn) {
-          startBtn.addEventListener('click', () => {
-            howToPlay.style.display = 'none';
-            menuOverlay.style.display = 'flex';
+      const instrucciones = document.getElementById('howToPlayOverlay');
+      const menu = document.getElementById('menuOverlay');
+      if (instrucciones && menu) {
+        instrucciones.style.display = 'flex';
+        menu.style.display = 'none';
+        const botonEmpezar = document.getElementById('startGameBtn');
+        if (botonEmpezar) {
+          botonEmpezar.addEventListener('click', () => {
+            instrucciones.style.display = 'none';
+            menu.style.display = 'flex';
           });
         }
       }
 
-      const choices = Array.from(document.querySelectorAll('.choice'));
-      let current = choices[0] || null;
-      if (current) current.classList.add('selected');
+      const opciones = Array.from(document.querySelectorAll('.choice'));
+      let actual = opciones[0] || null;
+      if (actual) actual.classList.add('selected');
 
-      choices.forEach(ch => ch.addEventListener('click', () => {
-        if (current) current.classList.remove('selected');
-        current = ch;
-        ch.classList.add('selected');
+      opciones.forEach(op => op.addEventListener('click', () => {
+        if (actual) actual.classList.remove('selected');
+        actual = op;
+        op.classList.add('selected');
       }));
 
-      playBtn.addEventListener('click', async () => {
-        try { await createAudioContextIfNeeded(); } catch (e) { /* ignore */ }
-        const type = current ? current.getAttribute('data-type') : 'color';
-        let selection;
-        if (type === 'sprite') {
-          const src = current ? current.getAttribute('data-src') : null;
-          selection = { type: 'sprite', src };
+      botonJugar.addEventListener('click', async () => {
+        try { await crearContextoAudioSiEsNecesario(); } catch (e) { }
+        const tipo = actual ? actual.getAttribute('data-type') : 'color';
+        let seleccion;
+        if (tipo === 'sprite') {
+          seleccion = { type: 'sprite', src: actual.getAttribute('data-src') };
         } else {
-          const color = current ? current.getAttribute('data-color') : CONFIG.PLAYER_COLOR;
-          selection = { type: 'color', color };
+          seleccion = { type: 'color', color: actual.getAttribute('data-color') };
         }
-        if (menuOverlay) menuOverlay.style.display = 'none';
-        const trans = document.getElementById('transitionOverlay');
-        if (trans) {
-          trans.style.display = 'flex';
+        if (menu) menu.style.display = 'none';
+        const transicion = document.getElementById('transitionOverlay');
+        if (transicion) {
+          transicion.style.display = 'flex';
           setTimeout(() => {
-            trans.style.display = 'none';
-            applySelectionAndStart(selection);
+            transicion.style.display = 'none';
+            aplicarSeleccionYEmpezar(seleccion);
           }, 2500);
         } else {
-          applySelectionAndStart(selection);
+          aplicarSeleccionYEmpezar(seleccion);
         }
       });
     }
 
-    // Restart button for Game Over
-    const restartBtn = document.getElementById('restartBtn');
-    if (restartBtn) restartBtn.addEventListener('click', () => {
+    const botonReiniciar = document.getElementById('restartBtn');
+    if (botonReiniciar) botonReiniciar.addEventListener('click', () => {
       const overlay = document.getElementById('gameOverOverlay');
       if (overlay) overlay.style.display = 'none';
-      // reset game state
-      player.lives = 5;
-      player.invulnerableUntil = 0;
-      player.flashUntil = 0;
-      respawnPlayer();
-      // Reset estrellas
+      jugador.vidas = 5;
+      jugador.invulnerableHasta = 0;
+      reaparecerJugador();
       for (const s of STARS) s.collected = false;
-      gameOver = false;
+      juegoTerminado = false;
     });
 
-    // Restart button for Victory
-    const restartWinBtn = document.getElementById('restartWinBtn');
-    if (restartWinBtn) restartWinBtn.addEventListener('click', () => {
+    const botonReiniciarVictoria = document.getElementById('restartWinBtn');
+    if (botonReiniciarVictoria) botonReiniciarVictoria.addEventListener('click', () => {
       const overlay = document.getElementById('victoryOverlay');
       if (overlay) overlay.style.display = 'none';
-      // reset game state
-      player.lives = 5;
-      player.invulnerableUntil = 0;
-      player.flashUntil = 0;
-      respawnPlayer();
-      // Reset estrellas
+      jugador.vidas = 5;
+      reaparecerJugador();
       for (const s of STARS) s.collected = false;
-      gameOver = false;
+      juegoTerminado = false;
     });
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeMenuUI);
+    document.addEventListener('DOMContentLoaded', inicializarInterfazMenu);
   } else {
-    initializeMenuUI();
+    inicializarInterfazMenu();
   }
 }

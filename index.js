@@ -35,6 +35,7 @@ app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
 
 app.use(express.static(__dirname + "/"));
+app.use('/cliente/game', express.static(__dirname + '/cliente/game'));
 // Servir la carpeta de assets del juego para que /assets/... funcione
 app.use('/assets', express.static(__dirname + '/cliente/game/assets'));
 let sistema = new modelo.Sistema({test:false});
