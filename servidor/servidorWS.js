@@ -3,6 +3,23 @@ const WORLD = {
     HEIGHT: 2400 // El alto del mundo de juego
 };
 const players = {};
+const partidaStars = {};
+
+function obtenerEstadoEstrellas(codigo) {
+    if (!codigo) return null;
+    if (!partidaStars[codigo]) {
+        partidaStars[codigo] = new Set();
+    }
+    return partidaStars[codigo];
+}
+
+function limpiarEstadoEstrellasSiProcede(codigo) {
+    if (!codigo) return;
+    const quedanJugadores = Object.values(players).some(p => p.codigo === codigo);
+    if (!quedanJugadores) {
+        delete partidaStars[codigo];
+    }
+}
 function ServidorWS(io) {
     const srv = this;
     this.io = undefined;
@@ -65,11 +82,61 @@ function ServidorWS(io) {
                 }
             });
 
+            socket.on('starCollected', (data) => {
+                const jugador = players[socket.id];
+                if (!jugador || typeof data?.index !== 'number') {
+                    return;
+                }
+                const codigo = jugador.codigo;
+                const estado = obtenerEstadoEstrellas(codigo);
+                if (!estado || estado.has(data.index)) {
+                    return;
+                }
+                estado.add(data.index);
+                if (codigo) {
+                    socket.to(codigo).emit('starCollected', { index: data.index });
+                } else {
+                    socket.broadcast.emit('starCollected', { index: data.index });
+                }
+            });
+
+            socket.on('resetStars', () => {
+                const jugador = players[socket.id];
+                if (!jugador || !jugador.codigo) {
+                    return;
+                }
+                partidaStars[jugador.codigo] = new Set();
+                socket.to(jugador.codigo).emit('resetStars');
+            });
+
+            socket.on('playerJoinsGame', (datos) => {
+                if (!datos || !players[socket.id]) {
+                    return;
+                }
+                const seleccion = datos.skin;
+                players[socket.id].email = datos.email;
+                players[socket.id].codigo = datos.codigo;
+                players[socket.id].skin = seleccion;
+                if (seleccion && typeof seleccion === 'string' && seleccion.startsWith('#')) {
+                    players[socket.id].color = seleccion;
+                }
+
+                // Reenviamos el estado actualizado para que los demás clientes carguen la skin correcta
+                socket.broadcast.emit('newPlayer', players[socket.id]);
+
+                const estadoEstrellas = obtenerEstadoEstrellas(datos.codigo);
+                if (estadoEstrellas) {
+                    socket.emit('currentStars', Array.from(estadoEstrellas));
+                }
+            });
+
 
             // 3. Manejar desconexión
             socket.on('disconnect', () => {
                 console.log('user disconnected', socket.id);
+                const codigo = players[socket.id]?.codigo;
                 delete players[socket.id];
+                limpiarEstadoEstrellasSiProcede(codigo);
                 io.emit('playerDisconnected', socket.id);
                 // ... (Tu lógica de remover la partida o notificar al rival)
             });
