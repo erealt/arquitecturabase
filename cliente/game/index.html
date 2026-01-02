@@ -235,15 +235,7 @@
         </div>
 
         <!-- Transition overlay shown briefly after selecting a character -->
-        <div id="transitionOverlay" style="display:none; position:absolute; left:0;right:0;top:0;bottom:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.95); z-index:40;">
-            <div style="text-align:center; color:#fff; font-family:sans-serif; width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column;">
-                <img id="transitionImg" src="/assets/transicon%20cohete.gif" alt="transicion" style="max-width:90vw; max-height:90vh; width:auto; height:auto; display:block; margin:0 auto 12px; object-fit:contain;" />
-                <div style="font-size:22px; margin-top:12px; line-height:1.3; max-width:80vw;">
-                    Preparando despegue...<br />
-                    ¡Nos vemos en el Jumpverse!
-                </div>
-            </div>
-        </div>
+       
 
 
         <!-- Game Over overlay -->
@@ -265,7 +257,17 @@
                     <p id="leaderboardEmpty">Sé la primera pareja en marcar un tiempo.</p>
                     <ol id="leaderboardList"></ol>
                 </div>
+                <button id="restartWinBtn2" style="padding:14px 32px; font-size:18px; border-radius:10px; background:linear-gradient(90deg,#ffd166,#06d6a0); color:#222; border:none; cursor:pointer; font-weight:bold;">Jugar de nuevo</button>
+                <button id="salirPartida2" style="padding:14px 32px; font-size:18px; border-radius:10px; background:linear-gradient(90deg,#ffd166,#06d6a0); color:#222; border:none; cursor:pointer; font-weight:bold;">Salir de la partida</button>
+            </div>
+        </div>
+        <div id="victoryOne" style="display:none; position:absolute; left:0;right:0;top:0;bottom:0; align-items:center; justify-content:center; background:rgba(255,255,255,0.97); z-index:70;">
+            <div style="text-align:center; color:#222; font-family:sans-serif; width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+                <div style="font-size:54px; font-weight:bold; margin-bottom:18px; color:#6c63ff;">¡Has ganado!</div>
+                <div style="font-size:22px; margin-bottom:22px; color:#333;">¡Recogiste todas las estrellas!<br>¡Eres el campeón del Jumpverse!</div>
+                
                 <button id="restartWinBtn" style="padding:14px 32px; font-size:18px; border-radius:10px; background:linear-gradient(90deg,#ffd166,#06d6a0); color:#222; border:none; cursor:pointer; font-weight:bold;">Jugar de nuevo</button>
+                <button id="salirPartida" style="padding:14px 32px; font-size:18px; border-radius:10px; background:linear-gradient(90deg,#ffd166,#06d6a0); color:#222; border:none; cursor:pointer; font-weight:bold;">Salir de la partida</button>
             </div>
         </div>
 

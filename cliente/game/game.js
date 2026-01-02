@@ -67,21 +67,31 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
   }
 
   function verificarVictoria() {
-    if (juegoTerminado || !Array.isArray(STARS) || STARS.length === 0) return;
-    if (STARS.every(s => s.collected)) {
-      juegoTerminado = true;
-      const numRivales = Object.keys(otrosJugadores).length;
-      if (numRivales > 0 && socket) {
-        socket.emit('coupleFinished', {
-          codigo,
-          tiempo: Number(tiempoTranscurrido)
-        });
-      }
+  if (juegoTerminado || !Array.isArray(STARS) || STARS.length === 0) return;
 
-      const overlay = document.getElementById('victoryOverlay');
-      if (overlay) overlay.style.display = 'flex';
+  if (STARS.every(s => s.collected)) {
+    juegoTerminado = true;
+    const numRivales = Object.keys(otrosJugadores).length;
+
+    // CASO MULTIJUGADOR: Mostramos ranking y enviamos tiempo
+    if (numRivales > 0 && socket) {
+      socket.emit('coupleFinished', {
+        codigo: codigo,
+        jugador1: miEmail, // Es bueno enviar quiénes son para el ranking
+        jugador2: Object.values(otrosJugadores)[0].email ,
+        tiempo: Number(tiempoTranscurrido)
+      });
+
+      const overlayMulti = document.getElementById('victoryOverlay');
+      if (overlayMulti) overlayMulti.style.display = 'flex';
+    } 
+    // CASO JUGADOR ÚNICO: Solo mensaje de victoria simple
+    else {
+      const overlaySolo = document.getElementById('victoryOne');
+      if (overlaySolo) overlaySolo.style.display = 'flex';
     }
   }
+}
 
   function renderLeaderboard(entries) {
     if (!leaderboardList) return;
@@ -415,10 +425,14 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
 
   function reiniciarJuego() {
     if (socket) socket.emit('resetStars');
+
     const overlayGameOver = document.getElementById('gameOverOverlay');
     const overlayVictory = document.getElementById('victoryOverlay');
+    const overlayVictoryOne = document.getElementById('victoryOne');
+    
     if (overlayGameOver) overlayGameOver.style.display = 'none';
     if (overlayVictory) overlayVictory.style.display = 'none';
+    if (overlayVictoryOne) overlayVictoryOne.style.display = 'none';
 
     juegoTerminado = false;
     jugador.x = canvas.width / 2 - CONFIG.PLAYER_WIDTH / 2;
@@ -531,8 +545,10 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     juegoTerminado = false;
     const overlayGameOver = document.getElementById('gameOverOverlay');
     const overlayVictory = document.getElementById('victoryOverlay');
+    const overlayVictoryOne = document.getElementById('victoryOne');
     if (overlayGameOver) overlayGameOver.style.display = 'none';
     if (overlayVictory) overlayVictory.style.display = 'none';
+    if (overlayVictoryOne) overlayVictoryOne.style.display = 'none';
     renderLeaderboard([]);
   });
 
@@ -544,11 +560,24 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
   const btnTutorial = document.getElementById('startGameBtn');
   const overlayTutorial = document.getElementById('howToPlayOverlay');
   const overlayMenu = document.getElementById('menuOverlay');
-  const restartBtn = document.getElementById('restartBtn');
-  const restartWinBtn = document.getElementById('restartWinBtn');
+  
+// Botones de "Jugar de nuevo"
+const btnReiniciarMulti = document.getElementById('restartWinBtn2');
+const btnReiniciarSolo = document.getElementById('restartWinBtn');
 
-  if (restartBtn) restartBtn.onclick = reiniciarJuego;
-  if (restartWinBtn) restartWinBtn.onclick = reiniciarJuego;
+if (btnReiniciarMulti) btnReiniciarMulti.onclick = reiniciarJuego;
+if (btnReiniciarSolo) btnReiniciarSolo.onclick = reiniciarJuego;
+
+// Botones de "Salir de la partida"
+const btnSalirMulti = document.getElementById('salirPartida2');
+const btnSalirSolo = document.getElementById('salirPartida');
+const salirAccion = () => {
+    // Recarga la página para volver al menú de inicio y limpiar el socket
+    window.location.reload(); 
+};
+
+if (btnSalirMulti) btnSalirMulti.onclick = salirAccion;
+if (btnSalirSolo) btnSalirSolo.onclick = salirAccion;
 
   if (btnTutorial) {
     btnTutorial.onclick = () => {
