@@ -1,4 +1,7 @@
 // --- VARIABLES GLOBALES ---
+//socket --> canal de comunicación en tiempo real con el servidor
+//otrosJugadores: Objeto donde guardo la posición y aspecto de los jugadores , para poder dibujarlos en la partida
+//jugador: jugador local
 var socket, canvas, ctx, camara, teclas = {}, otrosJugadores = {}, jugador;
 
 // Estado de Recursos
@@ -17,9 +20,11 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
 
   camara = { x: 0, y: Math.max(0, CONFIG.WORLD_HEIGHT - canvas.height) };
 
+  //Registración de eventos de teclado
   window.onkeydown = e => teclas[e.key] = true;
   window.onkeyup = e => teclas[e.key] = false;
 
+  //guardo el estado inicial del jugador local
   jugador = {
     x: canvas.width / 2 - CONFIG.PLAYER_WIDTH / 2,
     y: CONFIG.WORLD_HEIGHT - CONFIG.PLAYER_HEIGHT - 60,
@@ -73,7 +78,8 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
       if (!r) return res(null);
       const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = r;
     });
-
+    //Promise.all para cargar todas las imágenes en paralelo, no empieza el bucle del juego 
+    // hasta que todas las imágenes estén listas
     const [imgJ, imgF, imgE, imgS] = await Promise.all([
       cargarImg(ASSETS.PLAYER), cargarImg(ASSETS.BACKGROUND),
       cargarImg(ASSETS.SLIME), cargarImg(ASSETS.STAR)
@@ -148,6 +154,7 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
   }
 
   // --- MOTOR DE FÍSICAS ---
+  //Gravedad y movimiento de la camara
   function actualizarFisicas() {
     jugador.prevX = jugador.x; jugador.prevY = jugador.y;
     jugador.vy += CONFIG.GRAVITY;
@@ -171,6 +178,7 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     socket.emit('playerMovement', { x: Math.round(jugador.x), y: Math.round(jugador.y), vx: jugador.vx, vy: jugador.vy });
   }
 
+  //Es la lógica de colisiones entre el jugador y las plataformas, determinando desde qué lado se produce la colisión
   function resolverColisiones(p) {
     p.enSuelo = false;
     for (const plat of PLATFORMS) {
@@ -305,13 +313,15 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     dibujar();
     requestAnimationFrame(bucle);
   }
+  //Esta función es clave. Recibe la "skin" (ruta de imagen) de un rival
+  //  la descarga, y solo cuando termina de bajar (onload), se la asigna a ese jugador en tu pantalla.
   function cargarSkinOtroJugador(p) {
     if (p.skin && !p.skin.startsWith('#')) {
         let img = new Image();
         let ruta = p.skin;
         
-      // Construimos una ruta válida sin romper los paths absolutos servidos desde Express
-      let srcFinal = ruta;
+      // Construimos una ruta válida 
+      let srcFinal = ruta; //normalizamos las rutas, para que si el servidor dice "character.png", el navegador busque en "/assets/...." y no de error
       if (!/^https?:\/\//i.test(ruta)) {
         if (ruta.startsWith('/')) {
           srcFinal = ruta;
@@ -400,19 +410,19 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
 
   socket.on('newPlayer', (p) => {
     otrosJugadores[p.id] = p;
-    // USAMOS la función que tiene el onload y la ruta corregida
+   
     cargarSkinOtroJugador(p);
   });
 
   socket.on('playerMoved', (p) => {
     if (p.id !== socket.id) {
       if (otrosJugadores[p.id]) {
-        // Solo actualizamos posición y físicas, mantenemos la imagen (spriteImg)
+        // Solo actualizamos posición y físicas, mantenemos la imagen 
         otrosJugadores[p.id].x = p.x;
         otrosJugadores[p.id].y = p.y;
         otrosJugadores[p.id].vx = p.vx;
         otrosJugadores[p.id].vy = p.vy;
-        // Si el servidor mandó una skin nueva, podrías actualizarla aquí también
+        
       } else {
         // Si por alguna razón no existe (ej. entró tarde), lo creamos
         otrosJugadores[p.id] = p;
