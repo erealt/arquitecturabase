@@ -107,12 +107,27 @@ const PLATFORMS = (() => {
   return platforms;
 })();
 
-// Slime enemies: simple patrolers. Each slime: { x, y, w, h, minX, maxX, vx }
-// Place a few slimes at various heights near platform clusters.
+
 const SLIMES = [
+  // ZONA INICIAL (Suelo y primeras plataformas)
   { x: 120, y: CONFIG.WORLD_HEIGHT - 120, w: 28, h: 24, minX: 80, maxX: 360, vx: 0.8 },
-  { x: 520, y: CONFIG.WORLD_HEIGHT - 96 - 96 * 4, w: 28, h: 24, minX: 400, maxX: 700, vx: -0.7 },
-  { x: 200, y: CONFIG.WORLD_HEIGHT - 96 - 96 * 8, w: 28, h: 24, minX: 120, maxX: 340, vx: 0.6 }
+  { x: 500, y: CONFIG.WORLD_HEIGHT - 350, w: 28, h: 24, minX: 400, maxX: 650, vx: 1.2 },
+
+  // ZONA BAJA-MEDIA (Entre 1800 y 1400 px)
+  { x: 200, y: CONFIG.WORLD_HEIGHT - 650, w: 28, h: 24, minX: 100, maxX: 400, vx: 0.9 },
+  { x: 600, y: CONFIG.WORLD_HEIGHT - 900, w: 28, h: 24, minX: 450, maxX: 850, vx: -1.0 },
+
+  // ZONA MEDIA (Corazón del nivel, 1200 px)
+  { x: 300, y: CONFIG.WORLD_HEIGHT - 1200, w: 28, h: 24, minX: 150, maxX: 500, vx: 1.5 },
+  { x: 100, y: CONFIG.WORLD_HEIGHT - 1450, w: 28, h: 24, minX: 50, maxX: 350, vx: 0.8 },
+
+  // ZONA ALTA (Cerca de las nubes)
+  { x: 520, y: CONFIG.WORLD_HEIGHT - 1700, w: 28, h: 24, minX: 400, maxX: 700, vx: -0.7 },
+  { x: 200, y: CONFIG.WORLD_HEIGHT - 1950, w: 28, h: 24, minX: 120, maxX: 340, vx: 0.6 },
+
+  // ZONA FINAL (Cerca de la última estrella)
+  { x: 400, y: CONFIG.WORLD_HEIGHT - 2200, w: 28, h: 24, minX: 200, maxX: 600, vx: 1.1 },
+  { x: 650, y: CONFIG.WORLD_HEIGHT - 2350, w: 28, h: 24, minX: 500, maxX: 850, vx: -1.3 }
 ];
 
 // Multiplier for slime patrol speed
