@@ -67,31 +67,31 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
   }
 
   function verificarVictoria() {
-  if (juegoTerminado || !Array.isArray(STARS) || STARS.length === 0) return;
+    if (juegoTerminado || !Array.isArray(STARS) || STARS.length === 0) return;
 
-  if (STARS.every(s => s.collected)) {
-    juegoTerminado = true;
-    const numRivales = Object.keys(otrosJugadores).length;
+    if (STARS.every(s => s.collected)) {
+      juegoTerminado = true;
+      const numRivales = Object.keys(otrosJugadores).length;
 
-    // CASO MULTIJUGADOR: Mostramos ranking y enviamos tiempo
-    if (numRivales > 0 && socket) {
-      socket.emit('coupleFinished', {
-        codigo: codigo,
-        jugador1: miEmail, // Es bueno enviar quiénes son para el ranking
-        jugador2: Object.values(otrosJugadores)[0].email ,
-        tiempo: Number(tiempoTranscurrido)
-      });
+      // CASO MULTIJUGADOR: Mostramos ranking y enviamos tiempo
+      if (numRivales > 0 && socket) {
+        socket.emit('coupleFinished', {
+          codigo: codigo,
+          jugador1: miEmail, // Es bueno enviar quiénes son para el ranking
+          jugador2: Object.values(otrosJugadores)[0].email,
+          tiempo: Number(tiempoTranscurrido)
+        });
 
-      const overlayMulti = document.getElementById('victoryOverlay');
-      if (overlayMulti) overlayMulti.style.display = 'flex';
-    } 
-    // CASO JUGADOR ÚNICO: Solo mensaje de victoria simple
-    else {
-      const overlaySolo = document.getElementById('victoryOne');
-      if (overlaySolo) overlaySolo.style.display = 'flex';
+        const overlayMulti = document.getElementById('victoryOverlay');
+        if (overlayMulti) overlayMulti.style.display = 'flex';
+      }
+      // CASO JUGADOR ÚNICO: Solo mensaje de victoria simple
+      else {
+        const overlaySolo = document.getElementById('victoryOne');
+        if (overlaySolo) overlaySolo.style.display = 'flex';
+      }
     }
   }
-}
 
   function renderLeaderboard(entries) {
     if (!leaderboardList) return;
@@ -337,32 +337,32 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     ctx.fillText(`❤️ ${Math.ceil(jugador.vidas)}`, 20, 35);
     dibujarHUDEstrellas();
     dibujarCronometro();
-    
+
   }
   function dibujarCronometro() {
     // Contamos cuántos jugadores hay en el objeto otrosJugadores
     const numRivales = Object.keys(otrosJugadores).length;
 
+    if (!juegoTerminado) {
+      tiempoTranscurrido = ((Date.now() - tiempoInicio) / 1000).toFixed(2);
+    }
+    if (numRivales > 0) {
       if (!juegoTerminado) {
+        // Actualizamos el tiempo transcurrido
         tiempoTranscurrido = ((Date.now() - tiempoInicio) / 1000).toFixed(2);
       }
-      if (numRivales > 0) {
-        if (!juegoTerminado) {
-            // Actualizamos el tiempo transcurrido
-            tiempoTranscurrido = ((Date.now() - tiempoInicio) / 1000).toFixed(2);
-        }
       ctx.fillStyle = "white";
       ctx.font = "bold 24px Arial";
       ctx.fillText(`⏱️ Tiempo: ${tiempoTranscurrido}s`, canvas.width - 200, 35);
     }
   }
 
-    // En la lógica de victoria
-    if (STARS.every(s => s.collected)) {
-      juegoTerminado = true;
-      socket.emit('gameFinished', { tiempo: tiempoTranscurrido });
-      // Mostrar overlay de victoria con el tiempo final
-    }
+  // En la lógica de victoria
+  if (STARS.every(s => s.collected)) {
+    juegoTerminado = true;
+    socket.emit('gameFinished', { tiempo: tiempoTranscurrido });
+    // Mostrar overlay de victoria con el tiempo final
+  }
 
   function bucle() {
     if (!juegoTerminado) {
@@ -429,7 +429,7 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     const overlayGameOver = document.getElementById('gameOverOverlay');
     const overlayVictory = document.getElementById('victoryOverlay');
     const overlayVictoryOne = document.getElementById('victoryOne');
-    
+
     if (overlayGameOver) overlayGameOver.style.display = 'none';
     if (overlayVictory) overlayVictory.style.display = 'none';
     if (overlayVictoryOne) overlayVictoryOne.style.display = 'none';
@@ -472,7 +472,7 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
         slime.vx = base.vx;
       });
     }
-    tiempoInicio = Date.now(); 
+    tiempoInicio = Date.now();
     tiempoTranscurrido = 0;
 
     renderLeaderboard([]);
@@ -555,29 +555,40 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
   socket.on('leaderboardUpdate', (ranking) => {
     renderLeaderboard(Array.isArray(ranking) ? ranking : []);
   });
+  socket.on('partidaFinalizadaPorCompañero', () => {
+    alert("Tu compañero ha salido de la partida. Volviendo al menú...");
+    window.location.reload();
+  });
 
   // --- GESTIÓN DE INTERFAZ ---
   const btnTutorial = document.getElementById('startGameBtn');
   const overlayTutorial = document.getElementById('howToPlayOverlay');
   const overlayMenu = document.getElementById('menuOverlay');
-  
-// Botones de "Jugar de nuevo"
-const btnReiniciarMulti = document.getElementById('restartWinBtn2');
-const btnReiniciarSolo = document.getElementById('restartWinBtn');
 
-if (btnReiniciarMulti) btnReiniciarMulti.onclick = reiniciarJuego;
-if (btnReiniciarSolo) btnReiniciarSolo.onclick = reiniciarJuego;
+  // Botones de "Jugar de nuevo"
+  const btnReiniciarMulti = document.getElementById('restartWinBtn2');
+  const btnReiniciarSolo = document.getElementById('restartWinBtn');
 
-// Botones de "Salir de la partida"
-const btnSalirMulti = document.getElementById('salirPartida2');
-const btnSalirSolo = document.getElementById('salirPartida');
-const salirAccion = () => {
-    // Recarga la página para volver al menú de inicio y limpiar el socket
-    window.location.reload(); 
-};
+  if (btnReiniciarMulti) btnReiniciarMulti.onclick = reiniciarJuego;
+  if (btnReiniciarSolo) btnReiniciarSolo.onclick = reiniciarJuego;
 
-if (btnSalirMulti) btnSalirMulti.onclick = salirAccion;
-if (btnSalirSolo) btnSalirSolo.onclick = salirAccion;
+  // Botones de "Salir de la partida"
+  const btnSalirMulti = document.getElementById('salirPartida2');
+  const btnSalirSolo = document.getElementById('salirPartida');
+  const salirAccion = () => {
+    const numRivales = Object.keys(otrosJugadores).length;
+
+    // Si hay alguien más, avisamos al servidor antes de irnos
+    if (numRivales > 0 && socket) {
+      socket.emit('abandonarPartida', { codigo: codigo });
+    }
+
+    // Volver al menú principal 
+    window.location.reload();
+  };
+
+  if (btnSalirMulti) btnSalirMulti.onclick = salirAccion;
+  if (btnSalirSolo) btnSalirSolo.onclick = salirAccion;
 
   if (btnTutorial) {
     btnTutorial.onclick = () => {

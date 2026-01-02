@@ -288,9 +288,16 @@ function ServidorWS(io) {
                     console.error(`[SERVIDOR] Error al iniciar partida ${codigo}.`);
                 }
             });
+            socket.on('abandonarPartida', (datos) => {
+            // Avisamos a todos en la sala (el compañero) que el otro ha salido
+            socket.to(datos.codigo).emit('partidaFinalizadaPorCompañero');
+
+            console.log(`Partida ${datos.codigo} finalizada por abandono.`);
+        });
 
 
         });
+        
     }
 }
 module.exports.ServidorWS = ServidorWS;
