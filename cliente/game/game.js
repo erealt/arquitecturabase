@@ -423,7 +423,76 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     }
   }
 
+  // function reiniciarJuego() {
+  //   if (socket) socket.emit('resetStars');
+
+  //   const overlayGameOver = document.getElementById('gameOverOverlay');
+  //   const overlayVictory = document.getElementById('victoryOverlay');
+  //   const overlayVictoryOne = document.getElementById('victoryOne');
+
+  //   if (overlayGameOver) overlayGameOver.style.display = 'none';
+  //   if (overlayVictory) overlayVictory.style.display = 'none';
+  //   if (overlayVictoryOne) overlayVictoryOne.style.display = 'none';
+
+  //   juegoTerminado = false;
+  //   jugador.x = canvas.width / 2 - CONFIG.PLAYER_WIDTH / 2;
+  //   jugador.y = CONFIG.WORLD_HEIGHT - CONFIG.PLAYER_HEIGHT - 60;
+  //   jugador.vx = 0; jugador.vy = 0;
+  //   jugador.enSuelo = false; jugador.invulnerableHasta = 0;
+  //   jugador.vidas = 5;
+
+  //   camara.x = 0;
+  //   camara.y = Math.max(0, CONFIG.WORLD_HEIGHT - canvas.height);
+
+  //   Object.keys(teclas).forEach(k => teclas[k] = false);
+
+  //   PLATFORMS.forEach((plat, idx) => {
+  //     const base = plataformasIniciales[idx];
+  //     if (!base) return;
+  //     plat.x = base.x;
+  //     plat.y = base.y;
+  //     plat.w = base.w;
+  //     plat.h = base.h;
+  //     plat.moving = base.moving;
+  //     plat.minX = base.minX;
+  //     plat.maxX = base.maxX;
+  //     plat.vx = base.vx;
+  //   });
+
+  //   if (Array.isArray(SLIMES)) {
+  //     SLIMES.forEach((slime, idx) => {
+  //       const base = slimesIniciales[idx];
+  //       if (!base) return;
+  //       slime.x = base.x;
+  //       slime.y = base.y;
+  //       slime.w = base.w;
+  //       slime.h = base.h;
+  //       slime.minX = base.minX;
+  //       slime.maxX = base.maxX;
+  //       slime.vx = base.vx;
+  //     });
+  //   }
+  //   tiempoInicio = Date.now();
+  //   tiempoTranscurrido = 0;
+
+  //   renderLeaderboard([]);
+  //   restaurarEstrellas();
+  // }
+  // Esta es la función que se llama al pulsar los botones
   function reiniciarJuego() {
+    const numRivales = Object.keys(otrosJugadores).length;
+
+    // Si hay compañero, pedimos permiso al servidor para reiniciar a ambos
+    if (numRivales > 0 && socket) {
+      socket.emit('solicitarReinicioMundo', { codigo: codigo });
+    } else {
+      // Si estamos solos, reiniciamos localmente de inmediato
+      ejecutarReinicioLocal();
+    }
+  }
+
+  // Esta función contiene TODA tu lógica original de reseteo de variables
+  function ejecutarReinicioLocal() {
     if (socket) socket.emit('resetStars');
 
     const overlayGameOver = document.getElementById('gameOverOverlay');
@@ -438,7 +507,8 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     jugador.x = canvas.width / 2 - CONFIG.PLAYER_WIDTH / 2;
     jugador.y = CONFIG.WORLD_HEIGHT - CONFIG.PLAYER_HEIGHT - 60;
     jugador.vx = 0; jugador.vy = 0;
-    jugador.enSuelo = false; jugador.invulnerableHasta = 0;
+    jugador.enSuelo = false;
+    jugador.invulnerableHasta = 0;
     jugador.vidas = 5;
 
     camara.x = 0;
@@ -446,32 +516,9 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
 
     Object.keys(teclas).forEach(k => teclas[k] = false);
 
-    PLATFORMS.forEach((plat, idx) => {
-      const base = plataformasIniciales[idx];
-      if (!base) return;
-      plat.x = base.x;
-      plat.y = base.y;
-      plat.w = base.w;
-      plat.h = base.h;
-      plat.moving = base.moving;
-      plat.minX = base.minX;
-      plat.maxX = base.maxX;
-      plat.vx = base.vx;
-    });
+    // Restaurar plataformas y enemigos a su estado inicial
+    restaurarMundoOriginal();
 
-    if (Array.isArray(SLIMES)) {
-      SLIMES.forEach((slime, idx) => {
-        const base = slimesIniciales[idx];
-        if (!base) return;
-        slime.x = base.x;
-        slime.y = base.y;
-        slime.w = base.w;
-        slime.h = base.h;
-        slime.minX = base.minX;
-        slime.maxX = base.maxX;
-        slime.vx = base.vx;
-      });
-    }
     tiempoInicio = Date.now();
     tiempoTranscurrido = 0;
 
@@ -559,6 +606,10 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     alert("Tu compañero ha salido de la partida. Volviendo al menú...");
     window.location.reload();
   });
+  socket.on('forzarReinicioLocal', () => {
+    console.log("Servidor ordena reinicio sincronizado");
+    ejecutarReinicioLocal();
+});
 
   // --- GESTIÓN DE INTERFAZ ---
   const btnTutorial = document.getElementById('startGameBtn');

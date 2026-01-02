@@ -289,15 +289,24 @@ function ServidorWS(io) {
                 }
             });
             socket.on('abandonarPartida', (datos) => {
-            // Avisamos a todos en la sala (el compañero) que el otro ha salido
-            socket.to(datos.codigo).emit('partidaFinalizadaPorCompañero');
+                // Avisamos a todos en la sala (el compañero) que el otro ha salido
+                socket.to(datos.codigo).emit('partidaFinalizadaPorCompañero');
 
-            console.log(`Partida ${datos.codigo} finalizada por abandono.`);
+                console.log(`Partida ${datos.codigo} finalizada por abandono.`);
+            });
+            socket.on('solicitarReinicioMundo', (datos) => {
+                // Limpiamos las estrellas en el servidor para esta partida
+                if (partidaStars[datos.codigo]) {
+                    partidaStars[datos.codigo] = new Set();
+                }
+
+                srv.io.to(datos.codigo).emit('forzarReinicioLocal');
+                console.log(`[WS] Comando de reinicio cooperativo enviado a sala: ${datos.codigo}`);
+            });
+
+
         });
 
-
-        });
-        
     }
 }
 module.exports.ServidorWS = ServidorWS;
