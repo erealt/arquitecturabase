@@ -3,7 +3,8 @@
 //otrosJugadores: Objeto donde guardo la posición y aspecto de los jugadores , para poder dibujarlos en la partida
 //jugador: jugador local
 var socket, canvas, ctx, camara, teclas = {}, otrosJugadores = {}, jugador;
-
+var tiempoInicio = Date.now();
+var tiempoTranscurrido = 0;
 // Estado de Recursos
 var jugadorSprite = new Image(), imagenFondo, patronFondo, canvasFondo, recursosCargados = false;
 var imagenEnemigo, enemigoCargado = false, imagenEstrella, estrellaCargada = false;
@@ -67,6 +68,20 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     if (juegoTerminado || !Array.isArray(STARS) || STARS.length === 0) return;
     if (STARS.every(s => s.collected)) {
       juegoTerminado = true;
+      const numRivales = Object.keys(otrosJugadores).length;
+        
+        if (numRivales > 0) {
+            // Buscamos el email del compañero para formar la pareja
+            const compañeroEmail = Object.values(otrosJugadores)[0].email; 
+            
+            socket.emit('coupleFinished', {
+                codigo: codigo,
+                jugador1: miEmail,
+                jugador2: compañeroEmail,
+                tiempo: tiempoTranscurrido
+            });
+        }
+
       const overlay = document.getElementById('victoryOverlay');
       if (overlay) overlay.style.display = 'flex';
     }
@@ -282,7 +297,33 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     ctx.fillStyle = "white"; ctx.font = "20px Arial";
     ctx.fillText(`❤️ ${Math.ceil(jugador.vidas)}`, 20, 35);
     dibujarHUDEstrellas();
+    dibujarCronometro();
+    
   }
+  function dibujarCronometro() {
+    // Contamos cuántos jugadores hay en el objeto otrosJugadores
+    const numRivales = Object.keys(otrosJugadores).length;
+
+      if (!juegoTerminado) {
+        tiempoTranscurrido = ((Date.now() - tiempoInicio) / 1000).toFixed(2);
+      }
+      if (numRivales > 0) {
+        if (!juegoTerminado) {
+            // Actualizamos el tiempo transcurrido
+            tiempoTranscurrido = ((Date.now() - tiempoInicio) / 1000).toFixed(2);
+        }
+      ctx.fillStyle = "white";
+      ctx.font = "bold 24px Arial";
+      ctx.fillText(`⏱️ Tiempo: ${tiempoTranscurrido}s`, canvas.width - 200, 35);
+    }
+  }
+
+    // En la lógica de victoria
+    if (STARS.every(s => s.collected)) {
+      juegoTerminado = true;
+      socket.emit('gameFinished', { tiempo: tiempoTranscurrido });
+      // Mostrar overlay de victoria con el tiempo final
+    }
 
   function bucle() {
     if (!juegoTerminado) {
@@ -317,9 +358,9 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
   //  la descarga, y solo cuando termina de bajar (onload), se la asigna a ese jugador en tu pantalla.
   function cargarSkinOtroJugador(p) {
     if (p.skin && !p.skin.startsWith('#')) {
-        let img = new Image();
-        let ruta = p.skin;
-        
+      let img = new Image();
+      let ruta = p.skin;
+
       // Construimos una ruta válida 
       let srcFinal = ruta; //normalizamos las rutas, para que si el servidor dice "character.png", el navegador busque en "/assets/...." y no de error
       if (!/^https?:\/\//i.test(ruta)) {
@@ -333,15 +374,15 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
           srcFinal = '/assets/' + ruta.replace(/^\/+/, '');
         }
       }
-        
-        img.onload = () => {
-            if (otrosJugadores[p.id]) {
-                otrosJugadores[p.id].spriteImg = img; // Solo se asigna cuando ya cargó
-            }
-        };
-        img.src = srcFinal;
+
+      img.onload = () => {
+        if (otrosJugadores[p.id]) {
+          otrosJugadores[p.id].spriteImg = img; // Solo se asigna cuando ya cargó
+        }
+      };
+      img.src = srcFinal;
     }
-}
+  }
 
   function reiniciarJuego() {
     if (socket) socket.emit('resetStars');
@@ -388,6 +429,8 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
         slime.vx = base.vx;
       });
     }
+    tiempoInicio = Date.now(); 
+    tiempoTranscurrido = 0;
 
     restaurarEstrellas();
   }
@@ -410,7 +453,7 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
 
   socket.on('newPlayer', (p) => {
     otrosJugadores[p.id] = p;
-   
+
     cargarSkinOtroJugador(p);
   });
 
@@ -422,7 +465,7 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
         otrosJugadores[p.id].y = p.y;
         otrosJugadores[p.id].vx = p.vx;
         otrosJugadores[p.id].vy = p.vy;
-        
+
       } else {
         // Si por alguna razón no existe (ej. entró tarde), lo creamos
         otrosJugadores[p.id] = p;
