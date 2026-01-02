@@ -303,6 +303,14 @@ function ServidorWS(io) {
                 srv.io.to(datos.codigo).emit('forzarReinicioLocal');
                 console.log(`[WS] Comando de reinicio cooperativo enviado a sala: ${datos.codigo}`);
             });
+            socket.on('jugadorHaMuerto', (datos) => {
+                console.log(`[WS] Jugador ${datos.email} ha perdido sus vidas en la partida ${datos.codigo}`);
+
+                // Notificamos a toda la sala que la partida ha terminado por derrota
+                srv.io.to(datos.codigo).emit('gameOverSincronizado', {
+                    causante: datos.email
+                });
+            });
 
 
         });

@@ -186,9 +186,18 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
           jugador.vidas--;
           sonar('daño');
           jugador.invulnerableHasta = Date.now() + 1500;
+
           if (jugador.vidas <= 0) {
-            juegoTerminado = true;
-            document.getElementById('gameOverOverlay').style.display = 'flex';
+            const numRivales = Object.keys(otrosJugadores).length;
+
+            if (numRivales > 0 && socket) {
+              // Avisamos al servidor que HEMOS PERDIDO para que pare la partida de ambos
+              socket.emit('jugadorHaMuerto', { codigo: codigo, email: miEmail });
+            } else {
+              // Si estamos solos, fin de juego normal
+              juegoTerminado = true;
+              document.getElementById('gameOverOverlay').style.display = 'flex';
+            }
           }
         }
       }
@@ -423,61 +432,7 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     }
   }
 
-  // function reiniciarJuego() {
-  //   if (socket) socket.emit('resetStars');
 
-  //   const overlayGameOver = document.getElementById('gameOverOverlay');
-  //   const overlayVictory = document.getElementById('victoryOverlay');
-  //   const overlayVictoryOne = document.getElementById('victoryOne');
-
-  //   if (overlayGameOver) overlayGameOver.style.display = 'none';
-  //   if (overlayVictory) overlayVictory.style.display = 'none';
-  //   if (overlayVictoryOne) overlayVictoryOne.style.display = 'none';
-
-  //   juegoTerminado = false;
-  //   jugador.x = canvas.width / 2 - CONFIG.PLAYER_WIDTH / 2;
-  //   jugador.y = CONFIG.WORLD_HEIGHT - CONFIG.PLAYER_HEIGHT - 60;
-  //   jugador.vx = 0; jugador.vy = 0;
-  //   jugador.enSuelo = false; jugador.invulnerableHasta = 0;
-  //   jugador.vidas = 5;
-
-  //   camara.x = 0;
-  //   camara.y = Math.max(0, CONFIG.WORLD_HEIGHT - canvas.height);
-
-  //   Object.keys(teclas).forEach(k => teclas[k] = false);
-
-  //   PLATFORMS.forEach((plat, idx) => {
-  //     const base = plataformasIniciales[idx];
-  //     if (!base) return;
-  //     plat.x = base.x;
-  //     plat.y = base.y;
-  //     plat.w = base.w;
-  //     plat.h = base.h;
-  //     plat.moving = base.moving;
-  //     plat.minX = base.minX;
-  //     plat.maxX = base.maxX;
-  //     plat.vx = base.vx;
-  //   });
-
-  //   if (Array.isArray(SLIMES)) {
-  //     SLIMES.forEach((slime, idx) => {
-  //       const base = slimesIniciales[idx];
-  //       if (!base) return;
-  //       slime.x = base.x;
-  //       slime.y = base.y;
-  //       slime.w = base.w;
-  //       slime.h = base.h;
-  //       slime.minX = base.minX;
-  //       slime.maxX = base.maxX;
-  //       slime.vx = base.vx;
-  //     });
-  //   }
-  //   tiempoInicio = Date.now();
-  //   tiempoTranscurrido = 0;
-
-  //   renderLeaderboard([]);
-  //   restaurarEstrellas();
-  // }
   // Esta es la función que se llama al pulsar los botones
   function reiniciarJuego() {
     const numRivales = Object.keys(otrosJugadores).length;
@@ -488,6 +443,32 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     } else {
       // Si estamos solos, reiniciamos localmente de inmediato
       ejecutarReinicioLocal();
+    }
+  }
+  function restaurarMundoOriginal() {
+    // Restaurar Plataformas a su estado inicial
+    if (Array.isArray(PLATFORMS)) {
+      PLATFORMS.forEach((plat, idx) => {
+        const base = plataformasIniciales[idx];
+        if (base) {
+          plat.x = base.x;
+          plat.y = base.y;
+          plat.vx = base.vx;
+          plat.moving = base.moving;
+        }
+      });
+    }
+
+    // Restaurar Slimes (Enemigos) a su estado inicial
+    if (Array.isArray(SLIMES)) {
+      SLIMES.forEach((slime, idx) => {
+        const base = slimesIniciales[idx];
+        if (base) {
+          slime.x = base.x;
+          slime.y = base.y;
+          slime.vx = base.vx;
+        }
+      });
     }
   }
 
@@ -609,13 +590,31 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
   socket.on('forzarReinicioLocal', () => {
     console.log("Servidor ordena reinicio sincronizado");
     ejecutarReinicioLocal();
-});
+  });
+  socket.on('gameOverSincronizado', (datos) => {
+    juegoTerminado = true;
+
+    const overlay = document.getElementById('gameOverOverlay');
+    if (overlay) {
+      // Opcional: Personalizar el mensaje para saber quién perdió
+      const textoDerrota = overlay.querySelector('div:nth-child(2)');
+      if (textoDerrota) {
+        textoDerrota.innerHTML = datos.causante === miEmail
+          ? "Te has quedado sin vidas."
+          : `Tu compañero (${datos.causante}) se ha quedado sin vidas.`;
+      }
+      overlay.style.display = 'flex';
+    }
+  });
 
   // --- GESTIÓN DE INTERFAZ ---
   const btnTutorial = document.getElementById('startGameBtn');
   const overlayTutorial = document.getElementById('howToPlayOverlay');
   const overlayMenu = document.getElementById('menuOverlay');
 
+  //Game over 
+  const btnMuerte = document.getElementById('restartBtn');
+  if (btnMuerte) btnMuerte.onclick = reiniciarJuego;
   // Botones de "Jugar de nuevo"
   const btnReiniciarMulti = document.getElementById('restartWinBtn2');
   const btnReiniciarSolo = document.getElementById('restartWinBtn');
