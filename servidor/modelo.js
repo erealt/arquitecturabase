@@ -12,6 +12,7 @@ function Sistema(test) {
 
     this.partidas = {};
     this.usuariosPorEmail = {};
+    this.rankingsMem = [];
 
 
     this.registrarUsuario = function (obj, callback) {
@@ -230,6 +231,58 @@ function Sistema(test) {
         return -1; // O maneja el error según tu convención
     }
 };
+
+    this.registrarResultadoPareja = function (info, callback) {
+        if (!info || !Array.isArray(info.jugadores) || info.jugadores.length < 2) {
+            if (callback) {
+                callback([]);
+            }
+            return;
+        }
+
+        const registro = {
+            codigo: info.codigo || null,
+            jugadores: info.jugadores,
+            tiempo: Number(info.tiempo),
+            fecha: new Date()
+        };
+
+        if (!Number.isFinite(registro.tiempo)) {
+            if (callback) {
+                callback([]);
+            }
+            return;
+        }
+
+        const responder = (lista) => {
+            if (callback) {
+                callback(lista || []);
+            }
+        };
+
+        if (this.cad && typeof this.cad.insertarResultadoPareja === "function" && typeof this.cad.obtenerTopParejas === "function") {
+            this.cad.insertarResultadoPareja(registro, () => {
+                this.cad.obtenerTopParejas(5, responder);
+            });
+        } else {
+            this.rankingsMem.push(registro);
+            this.rankingsMem.sort((a, b) => a.tiempo - b.tiempo);
+            responder(this.rankingsMem.slice(0, 5));
+        }
+    };
+
+    this.obtenerTopParejas = function (limite, callback) {
+        const max = typeof limite === "number" && limite > 0 ? limite : 5;
+        if (this.cad && typeof this.cad.obtenerTopParejas === "function") {
+            this.cad.obtenerTopParejas(max, function (docs) {
+                if (callback) {
+                    callback(docs || []);
+                }
+            });
+        } else if (callback) {
+            callback(this.rankingsMem.slice(0, max));
+        }
+    };
 }
 function Usuario(o) {
     if (typeof o === 'string') {

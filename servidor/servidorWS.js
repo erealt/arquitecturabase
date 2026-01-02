@@ -4,6 +4,7 @@ const WORLD = {
 };
 const players = {};
 const partidaStars = {};
+const rankingResultados = {};
 
 function obtenerEstadoEstrellas(codigo) {
     if (!codigo) return null;
@@ -18,6 +19,7 @@ function limpiarEstadoEstrellasSiProcede(codigo) {
     const quedanJugadores = Object.values(players).some(p => p.codigo === codigo);
     if (!quedanJugadores) {
         delete partidaStars[codigo];
+        delete rankingResultados[codigo];
     }
 }
 function ServidorWS(io) {
@@ -106,7 +108,63 @@ function ServidorWS(io) {
                     return;
                 }
                 partidaStars[jugador.codigo] = new Set();
+                delete rankingResultados[jugador.codigo];
                 socket.to(jugador.codigo).emit('resetStars');
+            });
+
+            socket.on('coupleFinished', (payload = {}) => {
+                const jugador = players[socket.id];
+                if (!jugador || !jugador.codigo) {
+                    return;
+                }
+
+                const codigo = jugador.codigo;
+                const tiempo = parseFloat(payload.tiempo);
+                if (!Number.isFinite(tiempo)) {
+                    return;
+                }
+
+                if (rankingResultados[codigo]) {
+                    if (rankingResultados[codigo].top) {
+                        socket.emit('leaderboardUpdate', rankingResultados[codigo].top);
+                        return;
+                    }
+                    if (rankingResultados[codigo].pendiente) {
+                        return;
+                    }
+                }
+
+                let integrantes = [];
+                const partida = srv.sistema?.partidas?.[codigo];
+                if (partida && Array.isArray(partida.jugadores)) {
+                    integrantes = partida.jugadores.slice();
+                }
+                if (!integrantes.length) {
+                    integrantes = Object.values(players)
+                        .filter(p => p.codigo === codigo && p.email)
+                        .map(p => p.email);
+                }
+
+                const pareja = [...new Set(integrantes)].filter(Boolean);
+                if (pareja.length < 2) {
+                    return;
+                }
+
+                const jugadoresOrdenados = pareja.slice(0, 2).sort();
+                rankingResultados[codigo] = { pendiente: true };
+
+                if (typeof srv.sistema?.registrarResultadoPareja !== 'function') {
+                    return;
+                }
+
+                srv.sistema.registrarResultadoPareja({
+                    codigo,
+                    jugadores: jugadoresOrdenados,
+                    tiempo
+                }, (top5) => {
+                    rankingResultados[codigo] = { top: top5 || [] };
+                    srv.io.to(codigo).emit('leaderboardUpdate', rankingResultados[codigo].top);
+                });
             });
 
             socket.on('playerJoinsGame', (datos) => {

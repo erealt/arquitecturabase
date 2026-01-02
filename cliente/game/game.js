@@ -18,6 +18,8 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
   canvas = document.getElementById('game');
   if (!canvas) return;
   ctx = canvas.getContext('2d');
+  const leaderboardList = document.getElementById('leaderboardList');
+  const leaderboardEmpty = document.getElementById('leaderboardEmpty');
 
   camara = { x: 0, y: Math.max(0, CONFIG.WORLD_HEIGHT - canvas.height) };
 
@@ -69,23 +71,50 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     if (STARS.every(s => s.collected)) {
       juegoTerminado = true;
       const numRivales = Object.keys(otrosJugadores).length;
-        
-        if (numRivales > 0) {
-            // Buscamos el email del compañero para formar la pareja
-            const compañeroEmail = Object.values(otrosJugadores)[0].email; 
-            
-            socket.emit('coupleFinished', {
-                codigo: codigo,
-                jugador1: miEmail,
-                jugador2: compañeroEmail,
-                tiempo: tiempoTranscurrido
-            });
-        }
+      if (numRivales > 0 && socket) {
+        socket.emit('coupleFinished', {
+          codigo,
+          tiempo: Number(tiempoTranscurrido)
+        });
+      }
 
       const overlay = document.getElementById('victoryOverlay');
       if (overlay) overlay.style.display = 'flex';
     }
   }
+
+  function renderLeaderboard(entries) {
+    if (!leaderboardList) return;
+    leaderboardList.innerHTML = '';
+    if (!Array.isArray(entries) || entries.length === 0) {
+      if (leaderboardEmpty) leaderboardEmpty.style.display = 'block';
+      return;
+    }
+    if (leaderboardEmpty) leaderboardEmpty.style.display = 'none';
+    entries.slice(0, 5).forEach((entry, idx) => {
+      const li = document.createElement('li');
+      const pos = document.createElement('span');
+      pos.className = 'rank-pos';
+      pos.textContent = `${idx + 1}.`;
+
+      const pair = document.createElement('span');
+      pair.className = 'rank-pair';
+      const integrantes = Array.isArray(entry && entry.jugadores) ? entry.jugadores.join(' + ') : 'Pareja desconocida';
+      pair.textContent = integrantes;
+
+      const tiempo = document.createElement('span');
+      tiempo.className = 'rank-time';
+      const valor = Number(entry && entry.tiempo);
+      tiempo.textContent = Number.isFinite(valor) ? `${valor.toFixed(2)}s` : '--';
+
+      li.appendChild(pos);
+      li.appendChild(pair);
+      li.appendChild(tiempo);
+      leaderboardList.appendChild(li);
+    });
+  }
+
+  renderLeaderboard([]);
 
   // --- CARGA DE RECURSOS ---
   async function cargarRecursos() {
@@ -432,11 +461,14 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     tiempoInicio = Date.now(); 
     tiempoTranscurrido = 0;
 
+    renderLeaderboard([]);
     restaurarEstrellas();
   }
 
   async function iniciar() {
     await cargarRecursos();
+    tiempoInicio = Date.now();
+    tiempoTranscurrido = 0;
     bucle();
   }
 
@@ -501,6 +533,11 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     const overlayVictory = document.getElementById('victoryOverlay');
     if (overlayGameOver) overlayGameOver.style.display = 'none';
     if (overlayVictory) overlayVictory.style.display = 'none';
+    renderLeaderboard([]);
+  });
+
+  socket.on('leaderboardUpdate', (ranking) => {
+    renderLeaderboard(Array.isArray(ranking) ? ranking : []);
   });
 
   // --- GESTIÓN DE INTERFAZ ---

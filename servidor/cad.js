@@ -3,13 +3,15 @@ const ObjectId=require("mongodb").ObjectId;
 function CAD(){
 
 this.usuarios;
+this.rankings;
 
 this.conectar=async function(callback){ 
     let cad=this; 
     let client= new mongo(process.env.connectionString);
      await client.connect();
       const database=client.db("sistema"); 
-      cad.usuarios=database.collection("usuarios");
+    cad.usuarios=database.collection("usuarios");
+    cad.rankings=database.collection("rankingParejas");
       callback(database);
  } 
  this.buscarOCrearUsuario=function(usr,callback){
@@ -31,6 +33,15 @@ this.conectar=async function(callback){
     this.insertarUsuario = function (usuario, callback) {
         insertar(this.usuarios, usuario, callback);
     }
+    this.insertarResultadoPareja = function (registro, callback) {
+        if (!this.rankings) {
+            if (callback) {
+                callback(null);
+            }
+            return;
+        }
+        insertar(this.rankings, registro, callback);
+    }
     function buscar(coleccion, criterio, callback) {
         coleccion.find(criterio).toArray(function (error, usuarios) {
             if (usuarios.length == 0) {
@@ -50,6 +61,25 @@ this.conectar=async function(callback){
             else {
                 console.log("Nuevo elemento creado");
                 callback(elemento);
+            }
+        });
+    }
+    this.obtenerTopParejas = function (limite, callback) {
+        if (!this.rankings) {
+            if (callback) {
+                callback([]);
+            }
+            return;
+        }
+        const max = typeof limite === "number" && limite > 0 ? limite : 5;
+        this.rankings.find({}).sort({ tiempo: 1, fecha: 1 }).limit(max).toArray(function (err, docs) {
+            if (err) {
+                console.log("error");
+                if (callback) {
+                    callback([]);
+                }
+            } else if (callback) {
+                callback(docs);
             }
         });
     }

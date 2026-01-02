@@ -74,6 +74,58 @@
                 background: linear-gradient(90deg, #f9c74f 0%, #ffd166 100%);
                 transform: scale(1.06);
             }
+                #leaderboardPanel {
+                    width: min(520px, 90vw);
+                    background: #fff;
+                    border-radius: 18px;
+                    padding: 20px 24px;
+                    box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+                    margin-bottom: 22px;
+                    text-align: left;
+                }
+                #leaderboardPanel h3 {
+                    margin: 0 0 12px 0;
+                    font-size: 1.4rem;
+                    color: #6c63ff;
+                }
+                #leaderboardList {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+                #leaderboardList li {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 10px 0;
+                    border-bottom: 1px solid rgba(0,0,0,0.08);
+                    font-size: 0.95rem;
+                    gap: 12px;
+                }
+                #leaderboardList li:last-child {
+                    border-bottom: none;
+                }
+                .rank-pos {
+                    font-weight: 700;
+                    color: #6c63ff;
+                    min-width: 32px;
+                }
+                .rank-pair {
+                    flex: 1;
+                    font-weight: 600;
+                    color: #1f2933;
+                }
+                .rank-time {
+                    font-variant-numeric: tabular-nums;
+                    color: #555;
+                    min-width: 72px;
+                    text-align: right;
+                }
+                #leaderboardEmpty {
+                    margin: 0;
+                    color: #6b7280;
+                    font-size: 0.95rem;
+                }
             #howToPlayOverlay {
                 position: absolute; left:0;right:0;top:0;bottom:0;
                 display: flex; align-items: center; justify-content: center;
@@ -208,6 +260,11 @@
             <div style="text-align:center; color:#222; font-family:sans-serif; width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column;">
                 <div style="font-size:54px; font-weight:bold; margin-bottom:18px; color:#6c63ff;">¡Has ganado!</div>
                 <div style="font-size:22px; margin-bottom:22px; color:#333;">¡Recogiste todas las estrellas!<br>¡Eres el campeón del Jumpverse!</div>
+                <div id="leaderboardPanel">
+                    <h3>Ranking cooperativo</h3>
+                    <p id="leaderboardEmpty">Sé la primera pareja en marcar un tiempo.</p>
+                    <ol id="leaderboardList"></ol>
+                </div>
                 <button id="restartWinBtn" style="padding:14px 32px; font-size:18px; border-radius:10px; background:linear-gradient(90deg,#ffd166,#06d6a0); color:#222; border:none; cursor:pointer; font-weight:bold;">Jugar de nuevo</button>
             </div>
         </div>
