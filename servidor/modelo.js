@@ -141,6 +141,12 @@ function Sistema(test) {
         }
         return -1;
     };
+    this.eliminarPartida = function(codigo) {
+    if (this.partidas[codigo]) {
+        delete this.partidas[codigo];
+        console.log("Partida " + codigo + " eliminada del sistema.");
+    }
+};
     this.obtenerCodigo = function () {
         let codigo = (Math.random() * 999999).toFixed(0);
         while (this.partidas[codigo]) {
@@ -203,7 +209,8 @@ function Sistema(test) {
                 // 4. Crear un objeto JSON con esos dos datos
                 let partidaJSON = {
                     codigo: codigoPartida,
-                    creador: emailCreador
+                    creador: emailCreador,
+                    jugadores: partida.jugadores
                 };
 
                 // 5. Meter el objeto JSON en el array lista

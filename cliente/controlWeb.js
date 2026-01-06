@@ -257,6 +257,7 @@ function ControlWeb() {
 
         // Evento para abandonar (pendiente de implementar en el modelo/WS)
         $("#btnAbandonarPartida").on("click", function () {
+            ws.abandonarPartida(ws.codigo);
 
             cw.mostrarMenuPartidas();
         });
@@ -284,13 +285,13 @@ function ControlWeb() {
 
     this.mostrarListaPartidas = function (lista) {
         let html = '';
-
-        if (lista.length === 0) {
+        let disponibles = lista.filter(partida => partida.jugadores && partida.jugadores.length === 1);
+        if (disponibles.length === 0) {
             html = '<p class="text-muted">No hay partidas abiertas.</p>';
         } else {
             html = '<table class="table table-dark table-striped mt-3"><thead><tr><th>Código</th><th>Creador</th><th>Acción</th></tr></thead><tbody>';
 
-            lista.forEach(function (partida) {
+            disponibles.forEach(function (partida) {
                 html += `
                 <tr>
                     <td>${partida.codigo}</td>

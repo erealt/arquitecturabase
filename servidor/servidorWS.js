@@ -194,15 +194,25 @@ function ServidorWS(io) {
                 console.log('user disconnected', socket.id);
                 const codigo = players[socket.id]?.codigo;
                 delete players[socket.id];
+                sistema.eliminarPartida(codigo);
                 limpiarEstadoEstrellasSiProcede(codigo);
                 io.emit('playerDisconnected', socket.id);
-                // ... (Tu lógica de remover la partida o notificar al rival)
+                let lista = sistema.obtenerPartidasDisponibles();
+                srv.enviarGlobal(srv.io, "listaPartidas", lista)
+                io.emit('listaPartidas', lista);
+
+
+
             });
             socket.on("crearPartida", function (datos) {
                 let codigo = sistema.crearPartida(datos.email);
                 if (codigo != -1) {
                     socket.join(codigo);
-                    // --- DEBUG TEMPORAL: Verifica la sala del creador ---
+                    players[socket.id] = {
+                        email: datos.email,
+                        codigo: codigo
+                    };
+
                     console.log(`[DEBUG] Creador ${datos.email} unido a sala: ${codigo}. Salas del socket:`, [...socket.rooms]);
                     // ----------------------------------------------------
                 }
@@ -224,6 +234,11 @@ function ServidorWS(io) {
                 if (partida && partida != -1 && partida != -2) {
                     // 1. Unirse al socket (el Jugador Unido se une a la sala)
                     socket.join(datos.codigo);
+                    players[socket.id] = {
+                        id: socket.id,
+                        email: datos.email,
+                        codigo: datos.codigo
+                    };
 
                     // 2. Notificar a todos los miembros de la sala SI la partida está lista (2 jugadores)
                     if (partida.jugadores.length === partida.maxJug) {
@@ -237,15 +252,7 @@ function ServidorWS(io) {
                             });
                             console.log(`Notificación 'partidaLista' enviada al Creador a través de socket ID actualizado.`);
                         }
-                        // if (partida.socketCreator) {
-                        //     //  CRÍTICO: Usar el array de jugadores del objeto Partida, que tiene al Creador en [0]
-                        //     partida.socketCreator.emit('partidaLista', {
-                        //         "codigo": partida.codigo,
-                        //         "jugadores": partida.jugadores // ESTO DEBE SER [P1_email, P2_email]
-                        //     });
-                        //     console.log(`Notificación 'partidaLista' enviada al Creador. Orden de jugadores: ${partida.jugadores.join(', ')}`);
-                        // }
-                        // Partida completa, notificar a todos los jugadores en la sala
+
                         srv.io.sockets.in(datos.codigo).emit('partidaLista', {
                             codigo: datos.codigo,
                             jugadores: partida.jugadores // Array de emails: [creador, unido]
@@ -290,9 +297,15 @@ function ServidorWS(io) {
             });
             socket.on('abandonarPartida', (datos) => {
                 // Avisamos a todos en la sala (el compañero) que el otro ha salido
+
                 socket.to(datos.codigo).emit('partidaFinalizadaPorCompañero');
+                sistema.eliminarPartida(datos.codigo);
+                delete players[socket.id];
+                socket.leave(datos.codigo);
 
                 console.log(`Partida ${datos.codigo} finalizada por abandono.`);
+                let listaActualizada = sistema.obtenerPartidasDisponibles();
+                srv.enviarGlobal(srv.io, "listaPartidas", listaActualizada);
             });
             socket.on('solicitarReinicioMundo', (datos) => {
                 // Limpiamos las estrellas en el servidor para esta partida

@@ -113,6 +113,12 @@ function ClienteWS() {
          console.error("No hay código de partida para iniciar.");
       }
    }
+   this.abandonarPartida = function(codigo) {
+    this.socket.emit("abandonarPartida", { 
+        email: this.email, 
+        codigo: codigo 
+    });
+};
 
 
 this.jugarSolo = function () {
