@@ -33,7 +33,7 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     y: CONFIG.WORLD_HEIGHT - CONFIG.PLAYER_HEIGHT - 60,
     w: CONFIG.PLAYER_WIDTH, h: CONFIG.PLAYER_HEIGHT,
     vx: 0, vy: 0, velocidad: CONFIG.PLAYER_SPEED,
-    color: CONFIG.PLAYER_COLOR, enSuelo: false, vidas: 5, invulnerableHasta: 0
+    color: CONFIG.PLAYER_COLOR, enSuelo: false, vidas: 3, invulnerableHasta: 0
   };
 
   // Estados base para permitir reinicios consistentes
@@ -490,7 +490,7 @@ function StartGameManager(codigo, jugadoresIniciales, miEmail) {
     jugador.vx = 0; jugador.vy = 0;
     jugador.enSuelo = false;
     jugador.invulnerableHasta = 0;
-    jugador.vidas = 5;
+    jugador.vidas = 3;
 
     camara.x = 0;
     camara.y = Math.max(0, CONFIG.WORLD_HEIGHT - canvas.height);
